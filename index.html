@@ -197,7 +197,7 @@ label { display:block; font-size:12px; font-weight:700; margin:12px 0 6px; }
     $('#monthPanel').innerHTML=`<div class="section-head"><div><h1>${fmtMonth(state.viewMonth)}の目標</h1><div class="muted small">月間目標を決めて、日々の行動につなげよう</div></div><button class="btn" id="addGoal">＋ 目標追加</button></div>
       <div class="summary-grid"><div class="metric"><strong>${goals.length}</strong><span>目標数</span></div><div class="metric"><strong>${done.length}/${scheduled}</strong><span>完了ToDo</span></div><div class="metric"><strong>${rate}%</strong><span>予定達成率</span></div></div>
       <div class="card"><div class="section-head"><h2>今月の目標一覧</h2><span class="muted small">進捗は完了記録から自動集計</span></div>
-      ${goals.length?goals.map(g=>{const p=goalPercent(g);return `<div class="goal-row"><div class="goal-icon">${esc(g.icon||'✦')}</div><div class="goal-main"><div class="goal-title">${esc(g.name)}</div><div class="goal-meta">${esc(g.category)} ・ 目標 ${goalTargetDisplay(g)}</div><div class="progress"><i style="width:${Math.min(100,p)}%"></i></div></div><div class="goal-value">${displayProgress(g)}<div class="muted small" style="text-align:right">${p}%</div></div><div class="goal-actions"><button class="btn secondary" data-goal-todo="${g.id}">ToDo化</button><button class="icon-btn" data-edit-goal="${g.id}" aria-label="編集">⋯</button></div></div>`}).join(''):`<div class="empty"><b>まだ月間目標がありません</b>最初の目標を登録してみましょう。</div>`}</div>
+      ${goals.length?goals.map(g=>{const p=goalPercent(g);return `<div class="goal-row"><div class="goal-icon">${esc(g.icon||'✦')}</div><div class="goal-main"><div class="goal-title">${esc(g.name)}</div><div class="goal-meta">${esc(g.category)} ・ 目標 ${goalTargetDisplay(g)}</div><div class="progress"><i style="width:${Math.min(100,p)}%"></i></div></div><div class="goal-value">${displayProgress(g)}<div class="muted small" style="text-align:right">${p}%</div></div><div class="goal-actions"><button class="btn secondary" data-goal-steps="${g.id}">行動リスト</button><button class="btn ghost" data-goal-todo="${g.id}">一括ToDo化</button><button class="icon-btn" data-edit-goal="${g.id}" aria-label="編集">⋯</button></div></div>`}).join(''):`<div class="empty"><b>まだ月間目標がありません</b>最初の目標を登録してみましょう。</div>`}</div>
       <div class="note">💡 月間目標のほか、思いついたToDoも自由に登録できます。カテゴリーは下の「カテゴリーを編集」から追加・変更できます。</div>
       <div class="note" style="margin-top:10px">📝 目標は登録後も編集できます。各目標の右側にある「⋯」を押すと、目標名・カテゴリー・アイコン・目標値・メモを変更できます。アイコンもいつでも変更可能です。<br>目標の「ToDo化」から、今日だけ・毎日・毎週（曜日指定）のToDoを自動登録できます。</div>
       <div class="section-head" style="margin-top:14px"><h2>カテゴリー設定</h2><button class="btn secondary" id="manageCategories">カテゴリーを編集</button></div>
@@ -206,6 +206,7 @@ label { display:block; font-size:12px; font-weight:700; margin:12px 0 6px; }
     $('#addGoal').onclick=()=>openGoalModal();
     document.querySelectorAll('[data-edit-goal]').forEach(b=>b.onclick=()=>openGoalModal(goalById(b.dataset.editGoal)));
     document.querySelectorAll('[data-goal-todo]').forEach(b=>b.onclick=()=>openGoalTodoModal(goalById(b.dataset.goalTodo)));
+    document.querySelectorAll('[data-goal-steps]').forEach(b=>b.onclick=()=>openGoalStepsModal(goalById(b.dataset.goalSteps)));
     $('#addMonthTask').onclick=()=>openTaskModal(state.viewMonth+'-01');
     $('#manageCategories').onclick=openCategoryModal;
     renderMonthTaskList();
@@ -290,6 +291,22 @@ label { display:block; font-size:12px; font-weight:700; margin:12px 0 6px; }
         if(!added){toast('登録できる新しいToDoはありませんでした');closeModal();return;}
         state.selectedDate=todayISO();state.viewMonth=monthKey(todayISO());await save();closeModal();activeTab='today';render();toast(`${added}件のToDoを登録しました`);
       };
+    });
+  };
+  const openGoalStepsModal = g => {
+    if(!g)return;
+    if(!Array.isArray(g.steps))g.steps=[];
+    const draw=()=>g.steps.map((s,i)=>`<div class="task"><input class="task-select" type="checkbox" data-pick-step="${i}" checked><div class="task-info"><input data-step-name="${i}" value="${esc(s.title)}" aria-label="行動名" maxlength="80"></div><button class="icon-btn" data-remove-step="${i}" aria-label="削除">✕</button></div>`).join('');
+    openModal('行動リストを編集',`<div class="note"><b>${esc(g.icon||'✦')} ${esc(g.name)}</b><br>目標達成のための小さな行動を登録します。今日やる行動にチェックを入れてください。</div><div id="goalStepList" style="margin-top:12px">${draw()}</div><div class="inline-form"><input id="newGoalStep" placeholder="例：英単語を10個覚える" maxlength="80"><button class="btn" id="addGoalStep">追加</button></div><div class="modal-actions"><button class="btn secondary" id="saveGoalSteps">リストを保存</button><button class="btn" id="pickGoalSteps">選択分を今日のToDoへ</button></div>`,()=>{
+      const refresh=()=>{$('#goalStepList').innerHTML=draw();bindRows();};
+      const bindRows=()=>{
+        document.querySelectorAll('[data-step-name]').forEach(el=>el.onchange=()=>{g.steps[Number(el.dataset.stepName)].title=el.value.trim();});
+        document.querySelectorAll('[data-remove-step]').forEach(el=>el.onclick=()=>{g.steps.splice(Number(el.dataset.removeStep),1);refresh();});
+      };
+      bindRows();
+      $('#addGoalStep').onclick=()=>{const v=$('#newGoalStep').value.trim();if(!v)return;g.steps.push({id:uid(),title:v});$('#newGoalStep').value='';refresh();};
+      $('#saveGoalSteps').onclick=async()=>{g.steps=g.steps.filter(s=>s.title&&s.title.trim());await save();closeModal();render();toast('行動リストを保存しました');};
+      $('#pickGoalSteps').onclick=async()=>{const checked=[...document.querySelectorAll('[data-pick-step]:checked')].map(el=>g.steps[Number(el.dataset.pickStep)]).filter(s=>s&&s.title.trim());if(!checked.length){toast('今日のToDoに追加する行動を選んでください');return;}const date=todayISO();let added=0;checked.forEach(s=>{if(state.tasks.some(t=>!t.deleted&&t.goalId===g.id&&t.date===date&&t.title===s.title))return;state.tasks.push({id:uid(),title:s.title,goalId:g.id,category:g.category||'未分類',date,status:'open',minutes:0,note:'',createdAt:new Date().toISOString(),deleted:false});added++;});await save();closeModal();state.selectedDate=date;state.viewMonth=monthKey(date);activeTab='today';render();toast(`${added}件を今日のToDoに追加しました`);};
     });
   };
   const openTaskModal = (initialDate=state.selectedDate) => { const goals=goalsForMonth(); openModal('ToDoを追加',`<form id="taskForm"><label>ToDoの内容</label><input id="taskTitle" required maxlength="80" placeholder="例：本を10分読む"><label>関連する月間目標（任意）</label><select id="taskGoal"><option value="">単発のToDoとして追加</option>${goals.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select><label>カテゴリー（後から変更できます）</label><select id="taskCategory">${state.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select><label>実行日</label><input type="date" id="taskDate" value="${initialDate}" required><label>実行時間（分・任意）</label><input type="number" id="taskMinutes" min="0" max="1440" placeholder="例：30"><label>メモ（任意）</label><textarea id="taskNote" rows="2"></textarea><div class="modal-actions"><button class="btn" type="submit">追加する</button></div></form>`,()=>{$('#taskGoal').onchange=()=>{const g=goalById($('#taskGoal').value);if(g)$('#taskCategory').value=g.category||'未分類';};$('#taskForm').onsubmit=async e=>{e.preventDefault();const goalId=$('#taskGoal').value||null;const t={id:uid(),title:$('#taskTitle').value.trim(),goalId,category:$('#taskCategory').value,date:$('#taskDate').value,status:'open',minutes:Number($('#taskMinutes').value)||0,note:$('#taskNote').value.trim(),createdAt:new Date().toISOString(),deleted:false};state.tasks.push(t);state.selectedDate=t.date;state.viewMonth=monthKey(t.date);await save();closeModal();activeTab='month';render();};}); };
