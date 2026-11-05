@@ -261,12 +261,29 @@ label { display:block; font-size:12px; font-weight:700; margin:12px 0 6px; }
     $('#homePanel').innerHTML=`<div class="section-head"><div><h1>ホーム</h1><div class="muted small">大きな目標を見つめ、今日の行動につなげよう</div></div></div>
       <div class="summary-grid"><div class="metric"><strong>${goals.length}</strong><span>大きな目標</span></div><div class="metric"><strong>${done.length}/${today.length}</strong><span>今日の完了ToDo</span></div><div class="metric"><strong>${pct(done.length,today.length)}%</strong><span>今日の達成率</span></div></div>
       <div class="section-head"><h2>大きな目標</h2><button class="btn" id="addBigGoal">＋ 目標を追加</button></div>
-      ${goals.length?goals.map(g=>`<div class="card" data-big-goal="${g.id}" role="button" tabindex="0" style="cursor:pointer"><div style="display:flex;align-items:flex-start;gap:12px"><div class="goal-icon" style="width:46px;height:46px;font-size:22px">${esc(g.icon||'✦')}</div><div style="flex:1;min-width:0"><div class="goal-title" style="font-size:17px">${esc(g.title)}</div>${g.targetDate?`<div class="goal-meta">目標時期：${esc(g.targetDate)}</div>`:''}${g.memo?`<div class="muted small" style="margin-top:7px;line-height:1.6">${esc(g.memo)}</div>`:''}</div><span class="muted">›</span></div></div>`).join(''):`<div class="card empty"><b>まだ大きな目標がありません</b>将来実現したいことや、人生で大切にしたい目標を登録してみましょう。</div>`}
+      ${goals.length?goals.map(g=>`<div class="card" data-big-goal="${g.id}" role="button" tabindex="0" style="cursor:pointer"><div style="display:flex;align-items:flex-start;gap:12px"><div class="goal-icon" style="width:46px;height:46px;font-size:22px">${esc(g.icon||'✦')}</div><div style="flex:1;min-width:0"><div class="goal-title" style="font-size:17px">${esc(g.title)}</div>${g.targetDate?`<div class="goal-meta">目標時期：${esc(g.targetDate)}</div>`:''}${g.memo?`<div class="muted small" style="margin-top:7px;line-height:1.6">${esc(g.memo)}</div>`:''}<button class="btn secondary" data-big-goal-steps="${g.id}" style="margin-top:12px">行動リスト</button></div><span class="muted">›</span></div></div>`).join(''):`<div class="card empty"><b>まだ大きな目標がありません</b>将来実現したいことや、人生で大切にしたい目標を登録してみましょう。</div>`}
       <div class="section-head" style="margin-top:22px"><h2>今日の行動</h2><button class="btn secondary" id="goToday">今日のToDoを見る</button></div>
       <div class="card"><div class="muted small">${fmtDate(todayISO())} の進捗</div><div class="progress" style="margin-top:10px"><i style="width:${pct(done.length,today.length)}%"></i></div><div class="muted small" style="margin-top:7px">${done.length} / ${today.length} 件完了</div></div>`;
     $('#addBigGoal').onclick=()=>openBigGoalModal();
     $('#goToday').onclick=()=>{state.selectedDate=todayISO();activeTab='today';render();};
-    document.querySelectorAll('[data-big-goal]').forEach(el=>{const edit=()=>openBigGoalModal(goals.find(g=>g.id===el.dataset.bigGoal));el.onclick=edit;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();edit();}};});
+    document.querySelectorAll('[data-big-goal]').forEach(el=>{const edit=()=>openBigGoalModal(goals.find(g=>g.id===el.dataset.bigGoal));el.onclick=e=>{if(e.target.closest('[data-big-goal-steps]'))return;edit();};el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();edit();}};});
+    document.querySelectorAll('[data-big-goal-steps]').forEach(btn=>btn.onclick=e=>{e.stopPropagation();openBigGoalStepsModal(goals.find(g=>g.id===btn.dataset.bigGoalSteps));});
+  };
+  const openBigGoalStepsModal = g => {
+    if(!g)return;
+    if(!Array.isArray(g.steps))g.steps=[];
+    const draw=()=>g.steps.map((step,i)=>`<div class="task"><input class="task-select" type="checkbox" data-big-pick="${i}" checked><div class="task-info"><input data-big-step-name="${i}" value="${esc(step.title)}" aria-label="行動名" maxlength="80"></div><button class="icon-btn" data-big-remove-step="${i}" aria-label="削除">✕</button></div>`).join('');
+    openModal('大きな目標の行動リスト',`<div class="note"><b>${esc(g.icon||'✦')} ${esc(g.title)}</b><br>目標を実現するための具体的な行動を登録します。今日取り組む行動にチェックを入れてください。</div><div id="bigGoalStepList" style="margin-top:12px">${draw()}</div><div class="inline-form"><input id="newBigGoalStep" placeholder="例：関連する本を調べる" maxlength="80"><button class="btn" id="addBigGoalStep">追加</button></div><div class="modal-actions"><button class="btn secondary" id="saveBigGoalSteps">リストを保存</button><button class="btn" id="pickBigGoalSteps">選択分を今日のToDoへ</button></div>`,()=>{
+      const bind=()=>{
+        document.querySelectorAll('[data-big-step-name]').forEach(el=>el.onchange=()=>{g.steps[Number(el.dataset.bigStepName)].title=el.value.trim();});
+        document.querySelectorAll('[data-big-remove-step]').forEach(el=>el.onclick=()=>{g.steps.splice(Number(el.dataset.bigRemoveStep),1);refresh();});
+      };
+      const refresh=()=>{$('#bigGoalStepList').innerHTML=draw();bind();};
+      bind();
+      $('#addBigGoalStep').onclick=()=>{const v=$('#newBigGoalStep').value.trim();if(!v)return;g.steps.push({id:uid(),title:v});$('#newBigGoalStep').value='';refresh();};
+      $('#saveBigGoalSteps').onclick=async()=>{g.steps=g.steps.filter(x=>x.title&&x.title.trim());await save();closeModal();render();toast('行動リストを保存しました');};
+      $('#pickBigGoalSteps').onclick=async()=>{const picked=[...document.querySelectorAll('[data-big-pick]:checked')].map(el=>g.steps[Number(el.dataset.bigPick)]).filter(x=>x&&x.title.trim());if(!picked.length){toast('今日のToDoに追加する行動を選んでください');return;}const date=todayISO();let added=0;picked.forEach(step=>{if(state.tasks.some(t=>!t.deleted&&t.bigGoalId===g.id&&t.date===date&&t.title===step.title))return;state.tasks.push({id:uid(),title:step.title,goalId:null,bigGoalId:g.id,category:'その他',date,status:'open',minutes:0,note:'',createdAt:new Date().toISOString(),deleted:false});added++;});await save();closeModal();state.selectedDate=date;state.viewMonth=monthKey(date);activeTab='today';render();toast(`${added}件を今日のToDoに追加しました`);};
+    });
   };
   const openBigGoalModal = g => {
     const editing=!!g;
