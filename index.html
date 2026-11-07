@@ -3,38 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#315dcc">
+<meta name="theme-color" content="#27845b">
 <title>Habit Log 統合版</title>
 <style>
-:root{--blue:#315dcc;--ink:#1f2937;--muted:#64748b;--line:#e5eaf1;--bg:#f5f7fb;--card:#fff;--green:#16834a;--red:#c24141}
+:root{--blue:#27845b;--ink:#1f2937;--muted:#64748b;--line:#e0e9e2;--bg:#f4f8f5;--card:#fff;--green:#16834a;--red:#c24141}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
 header{background:var(--blue);color:white;padding:18px 16px 16px;position:sticky;top:0;z-index:5}
 header .sub{font-size:12px;opacity:.85;margin-top:4px}.wrap{max-width:760px;margin:auto;padding:14px}
 h1{font-size:20px;margin:0}h2{font-size:18px;margin:8px 0 12px}h3{font-size:15px;margin:0 0 8px}
 p{line-height:1.55}.muted{color:var(--muted);font-size:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 2px 8px #1e293b08}
 .row{display:flex;align-items:center;gap:8px}.between{justify-content:space-between}.grow{flex:1;min-width:0}
-button,.btn{border:0;border-radius:10px;padding:10px 12px;background:#eaf0ff;color:#2349a7;font-weight:600;font-size:13px;cursor:pointer}
-button.primary{background:var(--blue);color:white}button.ghost{background:#f1f5f9;color:#334155}button.danger{background:#fff0f0;color:#a22}button.small{padding:7px 9px;font-size:12px}
-input,textarea,select{width:100%;border:1px solid #d8dee8;border-radius:10px;padding:11px;font:inherit;background:white;color:var(--ink)}
+button,.btn{border:0;border-radius:10px;padding:10px 12px;background:#e7f3ec;color:#176344;font-weight:600;font-size:13px;cursor:pointer}
+button.primary{background:var(--blue);color:white}button.ghost{background:#edf3ee;color:#365443}button.danger{background:#fff0f0;color:#a22}button.small{padding:7px 9px;font-size:12px}
+input,textarea,select{width:100%;border:1px solid #d2dfd5;border-radius:10px;padding:11px;font:inherit;background:white;color:var(--ink)}
 textarea{min-height:74px;resize:vertical}.field{margin:9px 0}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
 .tabs{position:fixed;bottom:0;left:0;right:0;z-index:10;display:grid;grid-template-columns:repeat(5,1fr);background:#ffffffed;backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:7px 4px calc(7px + env(safe-area-inset-bottom))}
-.tab{background:transparent;color:#64748b;padding:7px 2px;font-size:11px;border-radius:10px}.tab span{display:block;font-size:19px;margin-bottom:2px}.tab.active{background:#edf2ff;color:var(--blue)}
+.tab{background:transparent;color:#64748b;padding:7px 2px;font-size:11px;border-radius:10px}.tab span{display:block;font-size:19px;margin-bottom:2px}.tab.active{background:#e4f1e8;color:var(--blue)}
 .page{display:none}.page.active{display:block}.goal{border-left:5px solid var(--blue)}.goal h3{font-size:16px}
-.progress{height:8px;background:#edf0f5;border-radius:20px;overflow:hidden}.progress>i{display:block;height:100%;background:#22a06b;border-radius:20px}
+.progress{height:8px;background:#edf0f5;border-radius:20px;overflow:hidden}.progress>i{display:block;height:100%;background:#27845b;border-radius:20px}
 .node{position:relative;margin:8px 0 8px 14px;padding:10px;border:1px solid var(--line);border-radius:12px;background:white}
-.node:before{content:"";position:absolute;left:-12px;top:-10px;bottom:50%;width:10px;border-left:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;border-radius:0 0 0 7px}
-.node.root{margin-left:0;background:#eaf0ff;border-color:#c7d7ff}.node.root:before{display:none}
-.node .children{margin-left:12px;padding-left:9px;border-left:1px solid #dbe3ef}
+.node:before{content:"";position:absolute;left:-12px;top:-10px;bottom:50%;width:10px;border-left:1px solid #c4d4c8;border-bottom:1px solid #c4d4c8;border-radius:0 0 0 7px}
+.node.root{margin-left:0;background:#e7f3ec;border-color:#b9d9c5}.node.root:before{display:none}
+.node .children{margin-left:12px;padding-left:9px;border-left:1px solid #d5e4d9}
 .node .name{font-weight:650;font-size:14px;overflow-wrap:anywhere}.node .meta{font-size:11px;color:var(--muted);margin-top:4px}
 .node-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
-.tag{font-size:10px;padding:3px 7px;border-radius:20px;background:#eef2f7;color:#475569}
-.link-item{font-size:12px;padding:8px;background:#f8fafc;border-radius:9px;margin-top:6px}
+.tag{font-size:10px;padding:3px 7px;border-radius:20px;background:#edf3ee;color:#496254}
+.link-item{font-size:12px;padding:8px;background:#f6faf7;border-radius:9px;margin-top:6px}
 .checkrow{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid #f0f2f6}.checkrow:last-child{border:0}.checkrow input{width:20px;height:20px;margin-top:1px}
-.done{text-decoration:line-through;color:#94a3b8}.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.stat{background:#f8fafc;border-radius:12px;padding:12px}.stat strong{display:block;font-size:24px;margin-top:4px}
+.done{text-decoration:line-through;color:#94a3b8}.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.stat{background:#f6faf7;border-radius:12px;padding:12px}.stat strong{display:block;font-size:24px;margin-top:4px}
 .empty{text-align:center;color:#94a3b8;padding:25px 10px;font-size:13px}
 .modal{position:fixed;inset:0;background:#0f172a66;z-index:20;display:none;align-items:flex-end;justify-content:center}.modal.show{display:flex}.sheet{background:white;width:min(100%,650px);max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom))}
 .toolbar{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.notice{background:#fff8e6;border:1px solid #f5df9e;border-radius:12px;padding:10px;font-size:12px;color:#76530b}
-.hidden{display:none!important}.section-title{margin:20px 0 8px}.linkline{font-size:12px;color:#475569}.footer-note{font-size:11px;color:#94a3b8;text-align:center;padding:12px}
+.hidden{display:none!important}.section-title{margin:20px 0 8px}.linkline{font-size:12px;color:#496254}.footer-note{font-size:11px;color:#94a3b8;text-align:center;padding:12px}
 @media(min-width:650px){.wrap{padding:20px}.modal{align-items:center}.sheet{border-radius:20px}}
 </style>
 </head>
