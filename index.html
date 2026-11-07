@@ -1,385 +1,143 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f4f6f2">
-<title>Habit Log</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#315dcc">
+<title>Habit Log 統合版</title>
 <style>
-:root {
-  --site-primary: #315c4b;
-  --site-on-primary: #ffffff;
-  --site-secondary: #e5ede7;
-  --site-on-secondary: #244536;
-  --site-background: #f4f6f2;
-  --site-on-background: #202923;
-  --site-font-body: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
-  --site-font-heading: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
-  --site-heading-scale: 1;
-  --site-spacing-scale: 1;
-  --site-radius-scale: 1;
-  --site-decoration-opacity: 1;
-  color-scheme: light dark;
-}
-* { box-sizing: border-box; }
-body { margin: 0; font-family: var(--site-font-body); background: var(--site-background); color: var(--site-on-background); }
-#app { min-height: 100vh; background-color: var(--site-background); color: var(--site-on-background); padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
-button, input, select, textarea { font: inherit; }
-button { cursor: pointer; }
-.topbar { background: var(--site-primary); color: var(--site-on-primary); padding: 22px 20px 24px; }
-.topline { display:flex; align-items:center; justify-content:space-between; max-width:760px; margin:auto; }
-.brand { font-family:var(--site-font-heading); font-size:calc(22px * var(--site-heading-scale)); font-weight:800; letter-spacing:.02em; }
-.subbrand { opacity:.78; font-size:12px; margin-top:3px; }
-.month-nav { display:flex; align-items:center; gap:12px; }
-.month-nav button { border:1px solid #ffffff55; background:#ffffff15; color:white; border-radius:10px; width:34px; height:34px; }
-main { width:min(100% - 28px, 720px); margin: -10px auto 0; }
-.tabs { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; background:var(--site-secondary); padding:5px; border-radius:16px; position:sticky; top:0; z-index:5; }
-.tab { border:0; background:transparent; color:var(--site-on-secondary); padding:9px 1px; border-radius:12px; font-size:clamp(9px,2.7vw,12px); font-weight:700; white-space:nowrap; }
-.tab.home-tab { background:#d3e3d8; color:#244536; transform:scale(1.04); box-shadow:0 2px 8px #00000012; }
-.tab.home-tab.active { background:var(--site-primary); color:var(--site-on-primary); }
-.tab.active { background:var(--site-primary); color:var(--site-on-primary); box-shadow:0 2px 8px #00000015; }
-.tab span { display:block; font-size:17px; margin-bottom:3px; }
-.panel { padding:18px 0 10px; }
-.section-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:8px 0 14px; }
-h1 { font-size:calc(23px * var(--site-heading-scale)); margin:0; letter-spacing:-.03em; }
-h2 { font-size:16px; margin:0; }
-.muted { color:light-dark(#718078,#a8b4ad); }
-.small { font-size:12px; }
-.card { background:light-dark(#ffffff,#202a24); border:1px solid light-dark(#e4e9e3,#354139); border-radius:calc(18px * var(--site-radius-scale)); padding:16px; margin-bottom:12px; box-shadow:0 4px 16px #17291d08; }
-.summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:12px; }
-.metric { background:var(--site-secondary); border-radius:14px; padding:13px 10px; color:var(--site-on-secondary); }
-.metric strong { display:block; font-size:23px; letter-spacing:-.04em; }
-.metric span { font-size:11px; opacity:.8; }
-.progress { height:8px; border-radius:99px; background:light-dark(#e8eee8,#37433b); overflow:hidden; }
-.progress > i { display:block; height:100%; background:#4d9471; border-radius:99px; }
-.goal-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid light-dark(#edf0ec,#354139); }
-.goal-row:last-child { border-bottom:0; padding-bottom:0; }
-.goal-icon { width:38px; height:38px; border-radius:12px; background:var(--site-secondary); display:grid; place-items:center; font-size:18px; flex:none; }
-.goal-main { min-width:0; flex:1; cursor:pointer; }
-.goal-icon[data-edit-goal] { cursor:pointer; }
-.goal-title { font-weight:750; font-size:14px; }
-.goal-meta { font-size:11px; color:light-dark(#758179,#aab5ad); margin:3px 0 7px; }
-.goal-value { font-size:12px; font-weight:700; white-space:nowrap; }
-.btn { border:0; background:var(--site-primary); color:var(--site-on-primary); border-radius:12px; padding:11px 14px; font-weight:700; font-size:13px; }
-.btn.secondary { background:var(--site-secondary); color:var(--site-on-secondary); }
-.btn.ghost { background:transparent; color:var(--site-primary); padding:7px 9px; }
-.btn.danger { background:#f8e9e6; color:#a34232; }
-.full { width:100%; }
-.empty { text-align:center; padding:30px 14px; color:light-dark(#748078,#aab5ad); }
-.empty b { display:block; color:var(--site-on-background); margin-bottom:6px; }
-.date-line { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.date-line input { border:1px solid light-dark(#dce4dc,#46534a); border-radius:10px; background:transparent; color:inherit; padding:8px; }
-.task { display:flex; align-items:center; gap:11px; padding:13px 0; border-bottom:1px solid light-dark(#edf0ec,#354139); }
-.task:last-child { border-bottom:0; }
-.check { width:25px; height:25px; border:1.8px solid #9eaaa1; border-radius:50%; display:grid; place-items:center; background:transparent; color:white; flex:none; padding:0; }
-.check.done { background:#4d9471; border-color:#4d9471; }
-.task-info { flex:1; min-width:0; }
-.task-title { font-size:14px; font-weight:700; }
-.task-title.done { text-decoration:line-through; color:light-dark(#89938b,#89968d); }
-.task-sub { color:light-dark(#7b877e,#a6b1a8); font-size:11px; margin-top:3px; }
-.pill { font-size:10px; border-radius:99px; padding:4px 8px; background:var(--site-secondary); color:var(--site-on-secondary); white-space:nowrap; }
-.icon-btn { border:0; background:transparent; color:light-dark(#68756c,#b5c0b7); padding:5px; font-size:17px; }
-.inline-form { display:flex; gap:8px; margin-top:12px; }
-.inline-form input { flex:1; min-width:0; }
-input, select, textarea { width:100%; border:1px solid light-dark(#dce4dc,#46534a); border-radius:11px; background:light-dark(#fff,#172019); color:var(--site-on-background); padding:11px 12px; }
-label { display:block; font-size:12px; font-weight:700; margin:12px 0 6px; }
-.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.modal-backdrop { position:fixed; inset:0; background:#101b15a8; z-index:20; display:none; align-items:flex-end; justify-content:center; }
-.modal-backdrop.show { display:flex; }
-.modal { background:light-dark(#fff,#202a24); color:var(--site-on-background); width:min(100%,560px); border-radius:22px 22px 0 0; padding:22px 20px calc(22px + env(safe-area-inset-bottom)); max-height:90vh; overflow:auto; }
-.modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-.modal-head h2 { font-size:19px; }
-.modal-actions { display:flex; gap:8px; margin-top:18px; }
-.modal-actions button { flex:1; }
-.chart-bars { display:flex; align-items:flex-end; gap:8px; height:145px; padding:12px 3px 0; border-bottom:1px solid light-dark(#dfe6df,#3d4940); }
-.bar-col { flex:1; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:6px; min-width:0; }
-.bar { width:min(100%,32px); background:#78a88a; border-radius:7px 7px 2px 2px; min-height:3px; }
-.bar-label { font-size:10px; color:light-dark(#77847a,#a9b5aa); }
-.streak { display:flex; gap:5px; flex-wrap:wrap; margin-top:10px; }
-.streak i { width:13px; height:13px; border-radius:4px; background:light-dark(#e8ede8,#3a453d); }
-.streak i.on { background:#4d9471; }
-.category-line { display:flex; align-items:center; gap:10px; margin:13px 0; }
-.category-line .name { width:74px; font-size:12px; font-weight:700; }
-.category-line .progress { flex:1; }
-.category-line .percent { width:36px; text-align:right; font-size:12px; }
-.filter-row { display:flex; gap:7px; overflow-x:auto; padding:2px 0 10px; }
-.filter-chip { border:1px solid light-dark(#dce4dc,#46534a); background:transparent; color:inherit; border-radius:99px; padding:7px 11px; white-space:nowrap; font-size:11px; }
-.filter-chip.active { background:var(--site-primary); border-color:var(--site-primary); color:var(--site-on-primary); }
-.task-category { display:inline-flex; align-items:center; gap:4px; font-size:10px; color:light-dark(#607469,#b4c2b7); margin-top:4px; }
-.bulk-tools { display:flex; gap:7px; align-items:center; margin:4px 0 12px; }
-.bulk-tools select { flex:1; min-width:0; padding:8px; font-size:12px; }
-.bulk-tools button { padding:9px 10px; white-space:nowrap; }
-.task-select { width:17px; height:17px; flex:none; accent-color:var(--site-primary); }
-.note { background:var(--site-secondary); color:var(--site-on-secondary); border-radius:12px; padding:12px; font-size:12px; line-height:1.65; }
-.category-edit-row { display:flex; align-items:center; gap:7px; margin:9px 0; }
-.category-edit-row input { flex:1; min-width:0; padding:9px; }
-.category-edit-row button { flex:none; padding:8px 10px; }
-.weekday-options { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
-.weekday-options label { display:flex; align-items:center; gap:5px; margin:0; padding:7px 9px; border:1px solid light-dark(#dce4dc,#46534a); border-radius:10px; font-weight:500; }
-.weekday-options input { width:auto; }
-.goal-actions { display:flex; gap:6px; align-items:center; }
-.goal-actions .btn { padding:7px 9px; font-size:11px; white-space:nowrap; }
-.bottom-note { text-align:center; color:light-dark(#89948c,#9eaaa1); font-size:10px; padding:14px 0 4px; }
-@media (min-width:600px) { .modal-backdrop { align-items:center; padding:20px; } .modal { border-radius:22px; } }
-@media (prefers-color-scheme:dark) { .topbar { background:#263f33; } }
+:root{--blue:#315dcc;--ink:#1f2937;--muted:#64748b;--line:#e5eaf1;--bg:#f5f7fb;--card:#fff;--green:#16834a;--red:#c24141}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+header{background:var(--blue);color:white;padding:18px 16px 16px;position:sticky;top:0;z-index:5}
+header .sub{font-size:12px;opacity:.85;margin-top:4px}.wrap{max-width:760px;margin:auto;padding:14px}
+h1{font-size:20px;margin:0}h2{font-size:18px;margin:8px 0 12px}h3{font-size:15px;margin:0 0 8px}
+p{line-height:1.55}.muted{color:var(--muted);font-size:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 2px 8px #1e293b08}
+.row{display:flex;align-items:center;gap:8px}.between{justify-content:space-between}.grow{flex:1;min-width:0}
+button,.btn{border:0;border-radius:10px;padding:10px 12px;background:#eaf0ff;color:#2349a7;font-weight:600;font-size:13px;cursor:pointer}
+button.primary{background:var(--blue);color:white}button.ghost{background:#f1f5f9;color:#334155}button.danger{background:#fff0f0;color:#a22}button.small{padding:7px 9px;font-size:12px}
+input,textarea,select{width:100%;border:1px solid #d8dee8;border-radius:10px;padding:11px;font:inherit;background:white;color:var(--ink)}
+textarea{min-height:74px;resize:vertical}.field{margin:9px 0}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:10;display:grid;grid-template-columns:repeat(5,1fr);background:#ffffffed;backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:7px 4px calc(7px + env(safe-area-inset-bottom))}
+.tab{background:transparent;color:#64748b;padding:7px 2px;font-size:11px;border-radius:10px}.tab span{display:block;font-size:19px;margin-bottom:2px}.tab.active{background:#edf2ff;color:var(--blue)}
+.page{display:none}.page.active{display:block}.goal{border-left:5px solid var(--blue)}.goal h3{font-size:16px}
+.progress{height:8px;background:#edf0f5;border-radius:20px;overflow:hidden}.progress>i{display:block;height:100%;background:#22a06b;border-radius:20px}
+.node{position:relative;margin:8px 0 8px 14px;padding:10px;border:1px solid var(--line);border-radius:12px;background:white}
+.node:before{content:"";position:absolute;left:-12px;top:-10px;bottom:50%;width:10px;border-left:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;border-radius:0 0 0 7px}
+.node.root{margin-left:0;background:#eaf0ff;border-color:#c7d7ff}.node.root:before{display:none}
+.node .children{margin-left:12px;padding-left:9px;border-left:1px solid #dbe3ef}
+.node .name{font-weight:650;font-size:14px;overflow-wrap:anywhere}.node .meta{font-size:11px;color:var(--muted);margin-top:4px}
+.node-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:10px;padding:3px 7px;border-radius:20px;background:#eef2f7;color:#475569}
+.link-item{font-size:12px;padding:8px;background:#f8fafc;border-radius:9px;margin-top:6px}
+.checkrow{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid #f0f2f6}.checkrow:last-child{border:0}.checkrow input{width:20px;height:20px;margin-top:1px}
+.done{text-decoration:line-through;color:#94a3b8}.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.stat{background:#f8fafc;border-radius:12px;padding:12px}.stat strong{display:block;font-size:24px;margin-top:4px}
+.empty{text-align:center;color:#94a3b8;padding:25px 10px;font-size:13px}
+.modal{position:fixed;inset:0;background:#0f172a66;z-index:20;display:none;align-items:flex-end;justify-content:center}.modal.show{display:flex}.sheet{background:white;width:min(100%,650px);max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom))}
+.toolbar{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.notice{background:#fff8e6;border:1px solid #f5df9e;border-radius:12px;padding:10px;font-size:12px;color:#76530b}
+.hidden{display:none!important}.section-title{margin:20px 0 8px}.linkline{font-size:12px;color:#475569}.footer-note{font-size:11px;color:#94a3b8;text-align:center;padding:12px}
+@media(min-width:650px){.wrap{padding:20px}.modal{align-items:center}.sheet{border-radius:20px}}
 </style>
 </head>
 <body>
-<div id="app">
-  <header class="topbar">
-    <div class="topline">
-      <div><div class="brand">Habit Log</div><div class="subbrand">小さな行動を、続く習慣に。</div></div>
-      <div class="month-nav"><button id="prevMonth" aria-label="前月">‹</button><strong id="headerMonth"></strong><button id="nextMonth" aria-label="翌月">›</button></div>
-    </div>
-  </header>
-  <main>
-    <nav class="tabs" aria-label="メインメニュー">
-      <button class="tab" data-tab="today"><span>✓</span>今日のToDo</button>
-      <button class="tab" data-tab="month"><span>▦</span>月間ToDo</button>
-      <button class="tab home-tab active" data-tab="home"><span>⌂</span>ホーム</button>
-      <button class="tab" data-tab="analysis"><span>▥</span>分析</button>
-      <button class="tab" data-tab="review"><span>✎</span>振り返り</button>
-    </nav>
-    <section id="todayPanel" class="panel"></section>
-    <section id="monthPanel" class="panel" hidden></section>
-    <section id="homePanel" class="panel" hidden></section>
-    <section id="analysisPanel" class="panel" hidden></section>
-    <section id="reviewPanel" class="panel" hidden></section>
-    <div class="bottom-note">データはこのブラウザ内に保存されます。定期的にバックアップしてください。</div>
-  </main>
-</div>
-<div class="modal-backdrop" id="modalBackdrop"><div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><h2 id="modalTitle"></h2><button class="icon-btn" id="closeModal" aria-label="閉じる">✕</button></div><div id="modalBody"></div></div></div>
+<header><h1>Habit Log</h1><div class="sub">目標から、今日の行動まで。</div></header>
+<main class="wrap">
+<section id="today" class="page active">
+  <div class="row between"><h2>今日のToDo</h2><button class="primary" onclick="openTodo()">＋ ToDo追加</button></div>
+  <div class="muted" id="todayDate"></div>
+  <div class="card"><div class="row between"><b>今日の達成状況</b><b id="todayRate">0%</b></div><div class="progress" style="margin-top:9px"><i id="todayBar" style="width:0%"></i></div><div class="muted" id="todayCount" style="margin-top:7px">0 / 0 件完了</div></div>
+  <div class="card" id="todayList"></div>
+  <div class="card"><h3>未完了ToDoの繰り越し</h3><p class="muted">前日以前の未完了項目がある場合、翌日に移すか選べます。</p><div id="carryArea"></div></div>
+</section>
+<section id="monthly" class="page">
+  <div class="row between"><h2>月間ToDo・目標</h2><button class="primary" onclick="openMonthly()">＋ 月間目標</button></div>
+  <div class="muted" id="monthLabel"></div><div id="monthlyList"></div>
+  <div class="card"><h3>カテゴリ管理</h3><div class="row"><input id="newCategory" placeholder="カテゴリ名"><button onclick="addCategory()">追加</button></div><div id="categoryList" class="toolbar"></div></div>
+</section>
+<section id="home" class="page">
+  <div class="row between"><h2>大きな目標</h2><button class="primary" onclick="openGoal()">＋ 目標追加</button></div>
+  <p class="muted">目標ごとにツリーを作り、別の目標にある項目も関連付けられます。</p>
+  <div id="goalList"></div>
+  <div class="card"><h3>データ管理</h3><p class="muted">SafariのWebサイトデータ削除などに備え、定期的にJSONバックアップを保存してください。</p><div class="toolbar"><button onclick="exportData()">JSONバックアップ</button><button onclick="document.getElementById('importFile').click()">バックアップ復元</button><button onclick="exportCSV()">ToDoをCSV出力</button><input id="importFile" type="file" accept="application/json" class="hidden" onchange="importData(event)"></div><div class="muted" id="saveStatus">この端末に保存します</div></div>
+</section>
+<section id="analysis" class="page">
+  <h2>分析</h2><div class="muted">記録されたToDo実績から自動集計します。</div>
+  <div class="statgrid" style="margin-top:12px">
+    <div class="stat"><span class="muted">全体達成率</span><strong id="allRate">0%</strong></div>
+    <div class="stat"><span class="muted">連続達成日数</span><strong id="streak">0日</strong></div>
+    <div class="stat"><span class="muted">今月の目標進捗</span><strong id="monthRate">0%</strong></div>
+    <div class="stat"><span class="muted">完了した行動</span><strong id="doneCount">0件</strong></div>
+  </div>
+  <h3 class="section-title">大きな目標別の達成率</h3><div id="goalAnalysis"></div>
+  <h3 class="section-title">カテゴリ別達成率</h3><div id="categoryAnalysis"></div>
+  <h3 class="section-title">マインドマップ行動分析</h3><div id="nodeAnalysis"></div>
+  <h3 class="section-title">目標間の関連</h3><div id="linkAnalysis"></div>
+</section>
+<section id="reflection" class="page">
+  <div class="row between"><h2>振り返り</h2><button class="primary" onclick="saveReflection()">保存</button></div>
+  <div class="card"><div class="field"><label>日付</label><input type="date" id="reflectionDate"></div><div class="field"><label>できたこと</label><textarea id="reflectionGood" placeholder="今日できたこと"></textarea></div><div class="field"><label>できなかったこと</label><textarea id="reflectionBad" placeholder="改善したいこと"></textarea></div><div class="field"><label>気づき・次の一歩</label><textarea id="reflectionNext" placeholder="明日につなげること"></textarea></div></div>
+  <h3 class="section-title">過去の振り返り</h3><div id="reflectionHistory"></div>
+</section>
+</main>
+<nav class="tabs">
+<button class="tab active" data-page="today" onclick="showPage('today')"><span>☑</span>今日</button>
+<button class="tab" data-page="monthly" onclick="showPage('monthly')"><span>▦</span>月間</button>
+<button class="tab" data-page="home" onclick="showPage('home')"><span>◎</span>ホーム</button>
+<button class="tab" data-page="analysis" onclick="showPage('analysis')"><span>▥</span>分析</button>
+<button class="tab" data-page="reflection" onclick="showPage('reflection')"><span>✎</span>振り返り</button>
+</nav>
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div class="sheet"><div class="row between"><h2 id="modalTitle">編集</h2><button class="ghost" onclick="closeModal()">閉じる</button></div><div id="modalBody"></div></div></div>
 <script>
-(() => {
-  const $ = (s, root=document) => root.querySelector(s);
-  const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-  const parseDate = s => new Date(`${s}T12:00:00`);
-  const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const monthKey = s => s.slice(0,7);
-  const fmtMonth = s => { const [y,m]=s.split('-'); return `${y}年${Number(m)}月`; };
-  const fmtDate = s => { const d=parseDate(s); return `${d.getMonth()+1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`; };
-  const uid = () => Math.random().toString(36).slice(2,10);
-  const defaultCategories = ['未分類','運動','勉強','健康','生活','趣味','家庭菜園','家族','仕事','その他'];
-  const defaultState = () => ({ goals:[], bigGoals:[], tasks:[], reviews:{}, categories:[...defaultCategories], selectedDate:todayISO(), viewMonth:monthKey(todayISO()) });
-  let state = defaultState();
-  let activeTab = 'home';
-  let monthTaskFilter = 'すべて';
-  let selectedTaskIds = new Set();
-  let db = null;
-  const save = async () => {
-    if (db) return new Promise((resolve,reject)=>{ const tx=db.transaction('state','readwrite'); tx.objectStore('state').put(state,'main'); tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error); });
-    localStorage.setItem('habit-log-fallback',JSON.stringify(state));
-  };
-  const load = async () => {
-    if (!('indexedDB' in window)) { try { state=JSON.parse(localStorage.getItem('habit-log-fallback'))||defaultState(); } catch {} return; }
-    db=await new Promise((resolve,reject)=>{ const req=indexedDB.open('HabitLogDB',1); req.onupgradeneeded=()=>req.result.createObjectStore('state'); req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); });
-    state=await new Promise(resolve=>{ const tx=db.transaction('state','readonly'); const req=tx.objectStore('state').get('main'); req.onsuccess=()=>resolve(req.result||defaultState()); req.onerror=()=>resolve(defaultState()); });
-    if(!Array.isArray(state.categories))state.categories=[...defaultCategories];
-    if(!Array.isArray(state.bigGoals))state.bigGoals=[];
-    state.categories=[...new Set(['未分類',...state.categories.filter(c=>typeof c==='string'&&c.trim()).map(c=>c.trim())])];
-    state.goals.forEach(g=>{if(g.icon==='🌍'||g.icon==='✍️')g.icon='✦';});
-  };
-  const goalsForMonth = () => state.goals.filter(g=>g.month===state.viewMonth && !g.archived);
-  const goalById = id => state.goals.find(g=>g.id===id);
-  const tasksForDate = date => state.tasks.filter(t=>t.date===date && !t.deleted);
-  const monthTasks = () => state.tasks.filter(t=>monthKey(t.date)===state.viewMonth && !t.deleted);
-  const doneTasks = tasks => tasks.filter(t=>t.status==='done');
-  const pct = (a,b) => b ? Math.round(a/b*100) : 0;
-  const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const goalProgress = g => {
-    const tasks=state.tasks.filter(t=>t.goalId===g.id && monthKey(t.date)===g.month && !t.deleted && t.status==='done');
-    if (g.unit==='時間') return tasks.reduce((n,t)=>n+(Number(t.minutes)||0),0);
-    if (g.unit==='日') return new Set(tasks.map(t=>t.date)).size;
-    return tasks.length;
-  };
-  const unitLabel = g => g.unit==='時間'?'分':g.unit==='日'?'日':'回';
-  const displayProgress = g => g.unit==='時間' ? `${(goalProgress(g)/60).toFixed(goalProgress(g)%60===0?0:1)}時間` : `${goalProgress(g)}${unitLabel(g)}`;
-  const goalTargetDisplay = g => g.unit==='時間' ? `${g.target}時間` : `${g.target}${unitLabel(g)}`;
-  const goalPercent = g => pct(goalProgress(g),g.unit==='時間'?g.target*60:g.target);
-  const render = () => { $('#headerMonth').textContent=fmtMonth(state.viewMonth); renderMonth(); renderToday(); renderHome(); renderAnalysis(); renderReview(); document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab)); ['month','today','home','analysis','review'].forEach(t=>$('#'+t+'Panel').hidden=t!==activeTab); };
-  const renderMonth = () => {
-    const goals=goalsForMonth(), tasks=monthTasks(), done=doneTasks(tasks);
-    const scheduled=tasks.length, rate=pct(done.length,scheduled);
-    $('#monthPanel').innerHTML=`<div class="section-head"><div><h1>${fmtMonth(state.viewMonth)}の目標</h1><div class="muted small">月間目標を決めて、日々の行動につなげよう</div></div><button class="btn" id="addGoal">＋ 目標追加</button></div>
-      <div class="summary-grid"><div class="metric"><strong>${goals.length}</strong><span>目標数</span></div><div class="metric"><strong>${done.length}/${scheduled}</strong><span>完了ToDo</span></div><div class="metric"><strong>${rate}%</strong><span>予定達成率</span></div></div>
-      <div class="card"><div class="section-head"><h2>今月の目標一覧</h2><span class="muted small">進捗は完了記録から自動集計</span></div>
-      ${goals.length?goals.map(g=>{const p=goalPercent(g);return `<div class="goal-row"><div class="goal-icon" data-edit-goal="${g.id}" role="button" tabindex="0" aria-label="${esc(g.name)}を編集">${esc(g.icon||'✦')}</div><div class="goal-main" data-edit-goal="${g.id}" role="button" tabindex="0" aria-label="${esc(g.name)}を編集"><div class="goal-title">${esc(g.name)}</div><div class="goal-meta">${esc(g.category)} ・ 目標 ${goalTargetDisplay(g)}</div><div class="progress"><i style="width:${Math.min(100,p)}%"></i></div></div><div class="goal-value">${displayProgress(g)}<div class="muted small" style="text-align:right">${p}%</div></div><div class="goal-actions"><button class="btn secondary" data-goal-steps="${g.id}">行動リスト</button><button class="btn ghost" data-goal-todo="${g.id}">一括ToDo化</button></div></div>`}).join(''):`<div class="empty"><b>まだ月間目標がありません</b>最初の目標を登録してみましょう。</div>`}</div>
-      <div class="note">💡 月間目標のほか、思いついたToDoも自由に登録できます。カテゴリーは下の「カテゴリーを編集」から追加・変更できます。</div>
-      <div class="note" style="margin-top:10px">📝 目標は登録後も編集できます。目標名やアイコンの部分をタップすると、目標名・カテゴリー・アイコン・目標値・メモを変更できます。アイコンもいつでも変更可能です。<br>目標の「ToDo化」から、今日だけ・毎日・毎週（曜日指定）のToDoを自動登録できます。</div>
-      <div class="section-head" style="margin-top:14px"><h2>カテゴリー設定</h2><button class="btn secondary" id="manageCategories">カテゴリーを編集</button></div>
-      <div class="section-head" style="margin-top:22px"><div><h2>月間ToDo一覧</h2><div class="muted small">カテゴリーは後から設定・変更できます</div></div><button class="btn" id="addMonthTask">＋ ToDo追加</button></div>
-      <div class="card"><div class="filter-row" id="monthTaskFilters"></div><div id="monthTaskList"></div></div>`;
-    $('#addGoal').onclick=()=>openGoalModal();
-    document.querySelectorAll('[data-edit-goal]').forEach(b=>{const edit=()=>openGoalModal(goalById(b.dataset.editGoal));b.onclick=edit;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();edit();}};});
-    document.querySelectorAll('[data-goal-todo]').forEach(b=>b.onclick=()=>openGoalTodoModal(goalById(b.dataset.goalTodo)));
-    document.querySelectorAll('[data-goal-steps]').forEach(b=>b.onclick=()=>openGoalStepsModal(goalById(b.dataset.goalSteps)));
-    $('#addMonthTask').onclick=()=>openTaskModal(state.viewMonth+'-01');
-    $('#manageCategories').onclick=openCategoryModal;
-    renderMonthTaskList();
-  };
-  const taskCategory = t => t.category || (goalById(t.goalId)?.category) || '未分類';
-  const renderMonthTaskList = () => {
-    const tasks=monthTasks().slice().sort((a,b)=>a.date.localeCompare(b.date));
-    const cats=['すべて',...state.categories];
-    $('#monthTaskFilters').innerHTML=cats.map(c=>`<button class="filter-chip ${monthTaskFilter===c?'active':''}" data-month-filter="${esc(c)}">${esc(c)}</button>`).join('');
-    const filtered=monthTaskFilter==='すべて'?tasks:tasks.filter(t=>taskCategory(t)===monthTaskFilter);
-    $('#monthTaskList').innerHTML=`<div class="bulk-tools"><select id="bulkCategory"><option value="">選択したToDoのカテゴリーを変更</option>${state.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select><button class="btn secondary" id="applyBulkCategory">一括設定</button></div>`+(filtered.length?filtered.map(t=>`<div class="task"><input class="task-select" type="checkbox" data-select-task="${t.id}" ${selectedTaskIds.has(t.id)?'checked':''} aria-label="${esc(t.title)}を選択"><button class="check ${t.status==='done'?'done':''}" data-toggle-task="${t.id}">${t.status==='done'?'✓':''}</button><div class="task-info"><div class="task-title ${t.status==='done'?'done':''}">${esc(t.title)}</div><div class="task-sub">${fmtDate(t.date)}${goalById(t.goalId)?' ・ '+esc(goalById(t.goalId).name):''}</div><div class="task-category">● ${esc(taskCategory(t))}</div></div><span class="pill">${t.status==='done'?'完了':'未完了'}</span><button class="icon-btn" data-task-menu="${t.id}">⋯</button></div>`).join(''):'<div class="empty"><b>該当するToDoはありません</b>＋ToDo追加から登録できます。</div>');
-    document.querySelectorAll('[data-select-task]').forEach(b=>b.onchange=()=>{if(b.checked)selectedTaskIds.add(b.dataset.selectTask);else selectedTaskIds.delete(b.dataset.selectTask);});
-    $('#applyBulkCategory').onclick=async()=>{const category=$('#bulkCategory').value;if(!category){toast('カテゴリーを選択してください');return;}if(!selectedTaskIds.size){toast('ToDoを選択してください');return;}state.tasks.filter(t=>selectedTaskIds.has(t.id)).forEach(t=>t.category=category);selectedTaskIds.clear();await save();render();toast('カテゴリーを一括設定しました');};
-    document.querySelectorAll('[data-month-filter]').forEach(b=>b.onclick=()=>{monthTaskFilter=b.dataset.monthFilter;renderMonthTaskList();});
-    document.querySelectorAll('[data-toggle-task]').forEach(b=>b.onclick=()=>toggleTask(b.dataset.toggleTask));
-    document.querySelectorAll('[data-task-menu]').forEach(b=>b.onclick=()=>openTaskActions(b.dataset.taskMenu));
-  };
-  const openCategoryModal = () => {
-    const draw=()=>{
-      $('#modalBody').innerHTML=`<p class="muted small">カテゴリー名の変更は登録済みの目標・ToDoにも反映されます。削除したカテゴリーの記録は「未分類」に移動します。</p>${state.categories.map((c,i)=>`<div class="category-edit-row"><input data-category-name="${i}" value="${esc(c)}" ${c==='未分類'?'disabled':''}><button class="btn secondary" data-save-category="${i}" ${c==='未分類'?'disabled':''}>変更</button><button class="btn danger" data-delete-category="${i}" ${c==='未分類'?'disabled':''}>削除</button></div>`).join('')}<form id="newCategoryForm"><label>カテゴリーを追加</label><div class="inline-form"><input id="newCategoryName" maxlength="20" placeholder="例：家庭菜園" required><button class="btn" type="submit">追加</button></div></form>`;
-      document.querySelectorAll('[data-save-category]').forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.saveCategory),old=state.categories[i],name=$(`[data-category-name="${i}"]`).value.trim();if(!name){toast('カテゴリー名を入力してください');return;}if(state.categories.some((c,j)=>j!==i&&c===name)){toast('同じ名前のカテゴリーがあります');return;}state.categories[i]=name;state.goals.forEach(g=>{if(g.category===old)g.category=name;});state.tasks.forEach(t=>{if(t.category===old)t.category=name;});await save();draw();render();toast('カテゴリー名を変更しました');});
-      document.querySelectorAll('[data-delete-category]').forEach(b=>b.onclick=async()=>{const old=state.categories[Number(b.dataset.deleteCategory)];if(!confirm(`「${old}」を削除しますか？登録済みの記録は「未分類」になります。`))return;state.categories=state.categories.filter(c=>c!==old);state.goals.forEach(g=>{if(g.category===old)g.category='未分類';});state.tasks.forEach(t=>{if(t.category===old)t.category='未分類';});if(monthTaskFilter===old)monthTaskFilter='すべて';await save();draw();render();toast('カテゴリーを削除しました');});
-      $('#newCategoryForm').onsubmit=async e=>{e.preventDefault();const name=$('#newCategoryName').value.trim();if(!name)return;if(state.categories.includes(name)){toast('同じ名前のカテゴリーがあります');return;}state.categories.push(name);await save();draw();render();toast('カテゴリーを追加しました');};
-    };
-    openModal('カテゴリーを編集','',draw);
-  };
-  const renderToday = () => {
-    const date=state.selectedDate, tasks=tasksForDate(date), done=doneTasks(tasks);
-    const linked=tasks.filter(t=>t.goalId), extras=tasks.filter(t=>!t.goalId);
-    const group=(arr,label)=>`<div class="card"><div class="section-head"><h2>${label}</h2><span class="muted small">${doneTasks(arr).length}/${arr.length} 完了</span></div>${arr.length?arr.map(taskHTML).join(''):`<div class="empty" style="padding:15px 5px">この日のToDoはありません</div>`}</div>`;
-    $('#todayPanel').innerHTML=`<div class="section-head"><div><h1>今日のToDo</h1><div class="muted small">月間目標から、今日やることを選ぼう</div></div><button class="btn" id="addTask">＋ ToDo追加</button></div>
-      <div class="card"><div class="date-line"><button class="btn secondary" id="datePrev">‹ 前日</button><input id="selectedDate" type="date" value="${date}"><button class="btn secondary" id="dateNext">翌日 ›</button></div><div style="margin-top:12px;font-weight:750">${fmtDate(date)}</div><div class="progress" style="margin-top:10px"><i style="width:${pct(done.length,tasks.length)}%"></i></div><div class="muted small" style="margin-top:6px">${done.length} / ${tasks.length} 件完了 ・ ${pct(done.length,tasks.length)}%</div></div>
-      ${group(linked,'月間目標のToDo')}${group(extras,'自由に追加したToDo')}`;
-    $('#selectedDate').onchange=e=>{state.selectedDate=e.target.value;save().then(render);};
-    $('#datePrev').onclick=()=>moveDate(-1); $('#dateNext').onclick=()=>moveDate(1);
-    $('#addTask').onclick=()=>openTaskModal();
-    document.querySelectorAll('[data-toggle-task]').forEach(b=>b.onclick=()=>toggleTask(b.dataset.toggleTask));
-    document.querySelectorAll('[data-task-menu]').forEach(b=>b.onclick=()=>openTaskActions(b.dataset.taskMenu));
-  };
-  const taskHTML = t => { const g=goalById(t.goalId); return `<div class="task"><button class="check ${t.status==='done'?'done':''}" data-toggle-task="${t.id}" aria-label="完了切り替え">${t.status==='done'?'✓':''}</button><div class="task-info"><div class="task-title ${t.status==='done'?'done':''}">${esc(t.title)}</div><div class="task-sub">${g?esc(g.name)+' ・ ':''}${t.minutes?`${t.minutes}分 ・ `:''}${t.note?esc(t.note):t.status==='done'?'完了':'未完了'}</div></div><span class="pill">${t.status==='done'?'完了':g?'月間目標':'追加'}</span><button class="icon-btn" data-task-menu="${t.id}" aria-label="操作">⋯</button></div>`; };
-  const moveDate = delta => { const d=parseDate(state.selectedDate); d.setDate(d.getDate()+delta); state.selectedDate=iso(d); state.viewMonth=monthKey(state.selectedDate); save().then(render); };
-  const toggleTask = async id => { const t=state.tasks.find(x=>x.id===id); if(!t)return; t.status=t.status==='done'?'open':'done'; t.completedAt=t.status==='done'?new Date().toISOString():null; await save(); render(); };
-
-  const renderHome = () => {
-    const goals=state.bigGoals||[], today=tasksForDate(todayISO()), done=doneTasks(today);
-    $('#homePanel').innerHTML=`<div class="section-head"><div><h1>ホーム</h1><div class="muted small">大きな目標を見つめ、今日の行動につなげよう</div></div></div>
-      <div class="summary-grid"><div class="metric"><strong>${goals.length}</strong><span>大きな目標</span></div><div class="metric"><strong>${done.length}/${today.length}</strong><span>今日の完了ToDo</span></div><div class="metric"><strong>${pct(done.length,today.length)}%</strong><span>今日の達成率</span></div></div>
-      <div class="section-head"><h2>大きな目標</h2><button class="btn" id="addBigGoal">＋ 目標を追加</button></div>
-      ${goals.length?goals.map((g,i)=>`<div class="card" data-big-goal="${g.id}" role="button" tabindex="0" style="cursor:pointer"><div style="display:flex;align-items:flex-start;gap:12px"><div class="goal-icon" style="width:46px;height:46px;font-size:22px">${esc(g.icon||'✦')}</div><div style="flex:1;min-width:0"><div class="goal-title" style="font-size:17px">${esc(g.title)}</div>${g.targetDate?`<div class="goal-meta">目標時期：${esc(g.targetDate)}</div>`:''}${g.memo?`<div class="muted small" style="margin-top:7px;line-height:1.6">${esc(g.memo)}</div>`:''}<button class="btn secondary" data-big-goal-steps="${g.id}" style="margin-top:12px">行動リスト</button></div><div style="display:flex;flex-direction:column;gap:5px;flex:none"><button class="icon-btn" data-big-goal-move="up" data-big-goal-id="${g.id}" aria-label="上へ移動" ${i===0?'disabled':''}>▲</button><button class="icon-btn" data-big-goal-move="down" data-big-goal-id="${g.id}" aria-label="下へ移動" ${i===goals.length-1?'disabled':''}>▼</button></div></div></div>`).join(''):`<div class="card empty"><b>まだ大きな目標がありません</b>将来実現したいことや、人生で大切にしたい目標を登録してみましょう。</div>`}
-      <div class="section-head" style="margin-top:22px"><h2>今日の行動</h2><button class="btn secondary" id="goToday">今日のToDoを見る</button></div>
-      <div class="card"><div class="muted small">${fmtDate(todayISO())} の進捗</div><div class="progress" style="margin-top:10px"><i style="width:${pct(done.length,today.length)}%"></i></div><div class="muted small" style="margin-top:7px">${done.length} / ${today.length} 件完了</div></div>`;
-    $('#addBigGoal').onclick=()=>openBigGoalModal();
-    $('#goToday').onclick=()=>{state.selectedDate=todayISO();activeTab='today';render();};
-    document.querySelectorAll('[data-big-goal]').forEach(el=>{const edit=()=>openBigGoalModal(goals.find(g=>g.id===el.dataset.bigGoal));el.onclick=e=>{if(e.target.closest('[data-big-goal-steps]'))return;edit();};el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();edit();}};});
-    document.querySelectorAll('[data-big-goal-steps]').forEach(btn=>btn.onclick=e=>{e.stopPropagation();openBigGoalStepsModal(goals.find(g=>g.id===btn.dataset.bigGoalSteps));});
-    document.querySelectorAll('[data-big-goal-move]').forEach(btn=>btn.onclick=async e=>{e.stopPropagation();const index=state.bigGoals.findIndex(g=>g.id===btn.dataset.bigGoalId);if(index<0)return;const next=index+(btn.dataset.bigGoalMove==='up'?-1:1);if(next<0||next>=state.bigGoals.length)return;[state.bigGoals[index],state.bigGoals[next]]=[state.bigGoals[next],state.bigGoals[index]];await save();render();});
-  };
-  const openBigGoalStepsModal = g => {
-    if(!g)return;
-    if(!Array.isArray(g.steps))g.steps=[];
-    const draw=()=>g.steps.map((step,i)=>`<div class="task"><input class="task-select" type="checkbox" data-big-pick="${i}" checked><div class="task-info"><input data-big-step-name="${i}" value="${esc(step.title)}" aria-label="行動名" maxlength="80"></div><button class="icon-btn" data-big-remove-step="${i}" aria-label="削除">✕</button></div>`).join('');
-    openModal('大きな目標の行動リスト',`<div class="note"><b>${esc(g.icon||'✦')} ${esc(g.title)}</b><br>目標を実現するための具体的な行動を登録します。今日取り組む行動にチェックを入れてください。</div><div id="bigGoalStepList" style="margin-top:12px">${draw()}</div><div class="inline-form"><input id="newBigGoalStep" placeholder="例：関連する本を調べる" maxlength="80"><button class="btn" id="addBigGoalStep">追加</button></div><div class="modal-actions"><button class="btn secondary" id="saveBigGoalSteps">リストを保存</button><button class="btn" id="pickBigGoalSteps">選択分を今日のToDoへ</button></div>`,()=>{
-      const bind=()=>{
-        document.querySelectorAll('[data-big-step-name]').forEach(el=>el.onchange=()=>{g.steps[Number(el.dataset.bigStepName)].title=el.value.trim();});
-        document.querySelectorAll('[data-big-remove-step]').forEach(el=>el.onclick=()=>{g.steps.splice(Number(el.dataset.bigRemoveStep),1);refresh();});
-      };
-      const refresh=()=>{$('#bigGoalStepList').innerHTML=draw();bind();};
-      bind();
-      $('#addBigGoalStep').onclick=()=>{const v=$('#newBigGoalStep').value.trim();if(!v)return;g.steps.push({id:uid(),title:v});$('#newBigGoalStep').value='';refresh();};
-      $('#saveBigGoalSteps').onclick=async()=>{g.steps=g.steps.filter(x=>x.title&&x.title.trim());await save();closeModal();render();toast('行動リストを保存しました');};
-      $('#pickBigGoalSteps').onclick=async()=>{const picked=[...document.querySelectorAll('[data-big-pick]:checked')].map(el=>g.steps[Number(el.dataset.bigPick)]).filter(x=>x&&x.title.trim());if(!picked.length){toast('今日のToDoに追加する行動を選んでください');return;}const date=todayISO();let added=0;picked.forEach(step=>{if(state.tasks.some(t=>!t.deleted&&t.bigGoalId===g.id&&t.date===date&&t.title===step.title))return;state.tasks.push({id:uid(),title:step.title,goalId:null,bigGoalId:g.id,category:'その他',date,status:'open',minutes:0,note:'',createdAt:new Date().toISOString(),deleted:false});added++;});await save();closeModal();state.selectedDate=date;state.viewMonth=monthKey(date);activeTab='today';render();toast(`${added}件を今日のToDoに追加しました`);};
-    });
-  };
-  const openBigGoalModal = g => {
-    const editing=!!g;
-    openModal(editing?'大きな目標を編集':'大きな目標を追加',`<form id="bigGoalForm"><label>目標</label><input id="bigGoalTitle" required maxlength="100" placeholder="例：家族で海外を長期旅行する" value="${esc(g?.title||'')}"><label>アイコン</label><select id="bigGoalIcon"><option value="✦">✦ その他</option><option value="👨‍👩‍👧‍👦">👨‍👩‍👧‍👦 家族</option><option value="💪">💪 健康・運動</option><option value="📚">📚 学び</option><option value="💰">💰 お金</option><option value="🌱">🌱 暮らし</option><option value="✈️">✈️ 旅行</option><option value="🏡">🏡 住まい</option></select><label>目標時期（任意）</label><input id="bigGoalDate" type="text" maxlength="40" placeholder="例：2030年まで" value="${esc(g?.targetDate||'')}"><label>内容・理由（任意）</label><textarea id="bigGoalMemo" rows="3" placeholder="実現したい理由や、具体的なイメージ">${esc(g?.memo||'')}</textarea><div class="modal-actions">${editing?'<button type="button" class="btn danger" id="deleteBigGoal">削除</button>':''}<button class="btn" type="submit">保存する</button></div></form>`,()=>{
-      $('#bigGoalIcon').value=g?.icon||'✦';
-      $('#bigGoalForm').onsubmit=async e=>{e.preventDefault();const d={title:$('#bigGoalTitle').value.trim(),icon:$('#bigGoalIcon').value,targetDate:$('#bigGoalDate').value.trim(),memo:$('#bigGoalMemo').value.trim()};if(!d.title)return;if(editing)Object.assign(g,d);else state.bigGoals.push({...d,id:uid(),createdAt:new Date().toISOString()});await save();closeModal();render();};
-      if(editing)$('#deleteBigGoal').onclick=async()=>{if(!confirm('この大きな目標を削除しますか？'))return;state.bigGoals=state.bigGoals.filter(x=>x.id!==g.id);await save();closeModal();render();};
-    });
-  };
-  const renderAnalysis = () => {
-    const tasks=monthTasks(), done=doneTasks(tasks), rate=pct(done.length,tasks.length), goals=goalsForMonth();
-    const last7=Array.from({length:7},(_,i)=>{const d=parseDate(state.selectedDate);d.setDate(d.getDate()-6+i);const s=iso(d),ts=state.tasks.filter(t=>t.date===s&&!t.deleted);return {date:s,label:`${d.getMonth()+1}/${d.getDate()}`,rate:pct(doneTasks(ts).length,ts.length),count:ts.length};});
-    const streaks=goals.map(g=>({g,n:streakForGoal(g)}));
-    const cats=[...new Set(tasks.map(taskCategory))].map(c=>{const ts=tasks.filter(t=>taskCategory(t)===c);return {c,p:pct(doneTasks(ts).length,ts.length)};});
-    $('#analysisPanel').innerHTML=`<div class="section-head"><div><h1>習慣の分析</h1><div class="muted small">${fmtMonth(state.viewMonth)}の取り組みを確認</div></div></div>
-      <div class="summary-grid"><div class="metric"><strong>${rate}%</strong><span>月間達成率</span></div><div class="metric"><strong>${done.length}</strong><span>完了数</span></div><div class="metric"><strong>${Math.max(0,...streaks.map(x=>x.n))}日</strong><span>最長連続達成</span></div></div>
-      <div class="card"><div class="section-head"><h2>月間目標の進捗</h2></div>${goals.length?goals.map(g=>`<div class="goal-row"><div class="goal-main"><div class="goal-title">${esc(g.name)}</div><div class="goal-meta">${displayProgress(g)} / ${goalTargetDisplay(g)}</div><div class="progress"><i style="width:${Math.min(100,goalPercent(g))}%"></i></div></div><b class="goal-value">${goalPercent(g)}%</b></div>`).join(''):'<div class="empty">月間目標を登録すると進捗が表示されます。</div>'}</div>
-      <div class="card"><div class="section-head"><h2>直近7日間の達成率</h2><span class="muted small">選択日まで</span></div><div class="chart-bars">${last7.map(x=>`<div class="bar-col"><div class="bar" style="height:${Math.max(3,x.rate)}%" title="${x.rate}%"></div><div class="bar-label">${x.label}</div></div>`).join('')}</div><div class="muted small" style="margin-top:8px">ToDoが登録されていない日は達成率0%として表示します。</div></div>
-      <div class="card"><div class="section-head"><h2>カテゴリー別達成率</h2></div>${cats.length?cats.map(x=>`<div class="category-line"><div class="name">${esc(x.c)}</div><div class="progress"><i style="width:${x.p}%"></i></div><div class="percent">${x.p}%</div></div>`).join(''):'<div class="empty">目標をカテゴリー分けすると表示されます。</div>'}</div>
-      <div class="card"><div class="section-head"><h2>連続達成日数</h2></div>${streaks.length?streaks.map(x=>`<div class="goal-row"><div class="goal-main"><div class="goal-title">${esc(x.g.name)}</div><div class="goal-meta">現在の連続達成</div></div><strong>${x.n}日</strong></div>`).join(''):'<div class="empty">目標を登録すると表示されます。</div>'}</div>`;
-  };
-  const streakForGoal = g => { let d=parseDate(todayISO()), count=0; const todayTasks=state.tasks.filter(t=>t.goalId===g.id&&t.date===iso(d)&&t.status==='done'); if(!todayTasks.length)d.setDate(d.getDate()-1); for(let i=0;i<370;i++){const s=iso(d),ts=state.tasks.filter(t=>t.goalId===g.id&&t.date===s&&!t.deleted);if(ts.some(t=>t.status==='done')){count++;d.setDate(d.getDate()-1);}else break;} return count; };
-  const renderReview = () => { const r=state.reviews[state.viewMonth]||{}; const goals=goalsForMonth(); $('#reviewPanel').innerHTML=`<div class="section-head"><div><h1>月間振り返り</h1><div class="muted small">できたことを確認し、次の月につなげる</div></div></div><div class="card"><div class="summary-grid"><div class="metric"><strong>${goals.length}</strong><span>目標数</span></div><div class="metric"><strong>${doneTasks(monthTasks()).length}</strong><span>完了ToDo</span></div><div class="metric"><strong>${pct(doneTasks(monthTasks()).length,monthTasks().length)}%</strong><span>達成率</span></div></div><label for="reviewGood">今月できたこと</label><textarea id="reviewGood" rows="3" placeholder="例：読書を週4日続けられた">${esc(r.good||'')}</textarea><label for="reviewImprove">改善したいこと</label><textarea id="reviewImprove" rows="3" placeholder="例：英語学習の時間を朝に確保する">${esc(r.improve||'')}</textarea><label for="reviewNext">来月に向けて</label><textarea id="reviewNext" rows="3" placeholder="次の月に取り組みたいこと">${esc(r.next||'')}</textarea><button class="btn full" id="saveReview" style="margin-top:14px">振り返りを保存</button></div><div class="card"><h2>翌月の準備</h2><p class="muted small">今月の目標を翌月にコピーできます。コピー後に目標回数などを調整できます。</p><button class="btn secondary full" id="copyGoals">翌月に目標をコピー</button></div>`;
-    $('#saveReview').onclick=async()=>{state.reviews[state.viewMonth]={good:$('#reviewGood').value,improve:$('#reviewImprove').value,next:$('#reviewNext').value};await save();toast('振り返りを保存しました');};
-    $('#copyGoals').onclick=()=>{const [y,m]=state.viewMonth.split('-').map(Number),d=new Date(y,m,1),next=monthKey(iso(d));const existing=state.goals.filter(g=>g.month===next);if(existing.length&&!confirm('翌月には既に目標があります。追加でコピーしますか？'))return;goals.forEach(g=>state.goals.push({...g,id:uid(),month:next,createdAt:new Date().toISOString()}));state.viewMonth=next;save().then(render);toast('翌月に目標をコピーしました');};
-  };
-  const openModal = (title,html,onReady) => { $('#modalTitle').textContent=title; $('#modalBody').innerHTML=html; $('#modalBackdrop').classList.add('show'); $('#closeModal').onclick=closeModal; $('#modalBackdrop').onclick=e=>{if(e.target===$('#modalBackdrop'))closeModal();}; if(onReady)onReady(); };
-  const closeModal=()=>$('#modalBackdrop').classList.remove('show');
-  const openGoalModal = g => { const editing=!!g; openModal(editing?'目標を編集':'月間目標を追加',`<form id="goalForm"><label>目標名</label><input id="goalName" required maxlength="50" placeholder="例：読書" value="${esc(g?.name||'')}"><div class="form-grid"><div><label>カテゴリー</label><select id="goalCategory">${state.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select></div><div><label>アイコン</label><select id="goalIcon"><option value="📚">📚 勉強</option><option value="💪">💪 運動</option><option value="🌱">🌱 家庭菜園</option><option value="💰">💰 お金</option><option value="📖">📖 読書</option><option value="✦">✦ その他</option><option value="🧘">🧘 健康</option><option value="🏠">🏠 生活・家庭</option></select></div></div><div class="form-grid"><div><label>月間目標値</label><input id="goalTarget" type="number" min="1" max="9999" required value="${g?.target||12}"></div><div><label>単位</label><select id="goalUnit"><option value="回">回数</option><option value="時間">時間</option><option value="日">日数</option></select></div></div><label>メモ（任意）</label><textarea id="goalMemo" rows="2" placeholder="この目標を続ける理由など">${esc(g?.memo||'')}</textarea><div class="modal-actions">${editing?'<button type="button" class="btn danger" id="deleteGoal">削除</button>':''}<button class="btn" type="submit">保存する</button></div></form>`,()=>{
-      $('#goalCategory').value=g?.category||'運動';$('#goalIcon').value=g?.icon||'✦';$('#goalUnit').value=g?.unit||'回';
-      $('#goalForm').onsubmit=async e=>{e.preventDefault();const data={name:$('#goalName').value.trim(),category:$('#goalCategory').value,icon:$('#goalIcon').value,target:Number($('#goalTarget').value),unit:$('#goalUnit').value,memo:$('#goalMemo').value.trim()};if(!data.name||data.target<1)return;if(editing)Object.assign(g,data);else state.goals.push({...data,id:uid(),month:state.viewMonth,createdAt:new Date().toISOString()});await save();closeModal();render();};
-      if(editing)$('#deleteGoal').onclick=async()=>{if(!confirm('この目標を削除しますか？関連するToDoの記録も分析対象から外れます。'))return;g.archived=true;await save();closeModal();render();};
-    }); };
-  const openGoalTodoModal = g => {
-    if(!g)return;
-    openModal('目標をToDoにする',`<div class="note"><b>${esc(g.icon||'✦')} ${esc(g.name)}</b><br>今日から月末までのToDoをまとめて登録できます。</div><label>登録する頻度</label><select id="goalTodoFrequency"><option value="today">今日だけ</option><option value="daily">毎日</option><option value="weekly">毎週 曜日指定</option></select><div id="goalWeekdayArea" hidden><label>登録する曜日（複数選択可）</label><div class="weekday-options">${'日月火水木金土'.split('').map((d,i)=>`<label><input type="checkbox" value="${i}" data-goal-weekday> ${d}曜</label>`).join('')}</div></div><p class="muted small">既に同じ目標のToDoがある日は重複して登録しません。</p><div class="modal-actions"><button class="btn secondary" id="cancelGoalTodo">キャンセル</button><button class="btn" id="createGoalTodos">ToDoを登録</button></div>`,()=>{
-      $('#goalTodoFrequency').onchange=()=>$('#goalWeekdayArea').hidden=$('#goalTodoFrequency').value!=='weekly';
-      $('#cancelGoalTodo').onclick=closeModal;
-      $('#createGoalTodos').onclick=async()=>{
-        const frequency=$('#goalTodoFrequency').value;
-        const weekdays=[...document.querySelectorAll('[data-goal-weekday]:checked')].map(x=>Number(x.value));
-        if(frequency==='weekly'&&!weekdays.length){toast('曜日を1つ以上選択してください');return;}
-        const start=parseDate(todayISO()),end=parseDate(`${g.month}-01`);end.setMonth(end.getMonth()+1);end.setDate(0);
-        const dates=[];
-        if(frequency==='today')dates.push(todayISO());
-        else for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){if(frequency==='daily'||weekdays.includes(d.getDay()))dates.push(iso(d));}
-        let added=0;
-        dates.forEach(date=>{const exists=state.tasks.some(t=>!t.deleted&&t.goalId===g.id&&t.date===date);if(exists)return;state.tasks.push({id:uid(),title:g.name,goalId:g.id,category:g.category||'未分類',date,status:'open',minutes:0,note:'',createdAt:new Date().toISOString(),deleted:false});added++;});
-        if(!added){toast('登録できる新しいToDoはありませんでした');closeModal();return;}
-        state.selectedDate=todayISO();state.viewMonth=monthKey(todayISO());await save();closeModal();activeTab='today';render();toast(`${added}件のToDoを登録しました`);
-      };
-    });
-  };
-  const openGoalStepsModal = g => {
-    if(!g)return;
-    if(!Array.isArray(g.steps))g.steps=[];
-    const draw=()=>g.steps.map((s,i)=>`<div class="task"><input class="task-select" type="checkbox" data-pick-step="${i}" checked><div class="task-info"><input data-step-name="${i}" value="${esc(s.title)}" aria-label="行動名" maxlength="80"></div><button class="icon-btn" data-remove-step="${i}" aria-label="削除">✕</button></div>`).join('');
-    openModal('行動リストを編集',`<div class="note"><b>${esc(g.icon||'✦')} ${esc(g.name)}</b><br>目標達成のための小さな行動を登録します。今日やる行動にチェックを入れてください。</div><div id="goalStepList" style="margin-top:12px">${draw()}</div><div class="inline-form"><input id="newGoalStep" placeholder="例：英単語を10個覚える" maxlength="80"><button class="btn" id="addGoalStep">追加</button></div><div class="modal-actions"><button class="btn secondary" id="saveGoalSteps">リストを保存</button><button class="btn" id="pickGoalSteps">選択分を今日のToDoへ</button></div>`,()=>{
-      const refresh=()=>{$('#goalStepList').innerHTML=draw();bindRows();};
-      const bindRows=()=>{
-        document.querySelectorAll('[data-step-name]').forEach(el=>el.onchange=()=>{g.steps[Number(el.dataset.stepName)].title=el.value.trim();});
-        document.querySelectorAll('[data-remove-step]').forEach(el=>el.onclick=()=>{g.steps.splice(Number(el.dataset.removeStep),1);refresh();});
-      };
-      bindRows();
-      $('#addGoalStep').onclick=()=>{const v=$('#newGoalStep').value.trim();if(!v)return;g.steps.push({id:uid(),title:v});$('#newGoalStep').value='';refresh();};
-      $('#saveGoalSteps').onclick=async()=>{g.steps=g.steps.filter(s=>s.title&&s.title.trim());await save();closeModal();render();toast('行動リストを保存しました');};
-      $('#pickGoalSteps').onclick=async()=>{const checked=[...document.querySelectorAll('[data-pick-step]:checked')].map(el=>g.steps[Number(el.dataset.pickStep)]).filter(s=>s&&s.title.trim());if(!checked.length){toast('今日のToDoに追加する行動を選んでください');return;}const date=todayISO();let added=0;checked.forEach(s=>{if(state.tasks.some(t=>!t.deleted&&t.goalId===g.id&&t.date===date&&t.title===s.title))return;state.tasks.push({id:uid(),title:s.title,goalId:g.id,category:g.category||'未分類',date,status:'open',minutes:0,note:'',createdAt:new Date().toISOString(),deleted:false});added++;});await save();closeModal();state.selectedDate=date;state.viewMonth=monthKey(date);activeTab='today';render();toast(`${added}件を今日のToDoに追加しました`);};
-    });
-  };
-  const openTaskModal = (initialDate=state.selectedDate) => { const goals=goalsForMonth(); openModal('ToDoを追加',`<form id="taskForm"><label>ToDoの内容</label><input id="taskTitle" required maxlength="80" placeholder="例：本を10分読む"><label>関連する月間目標（任意）</label><select id="taskGoal"><option value="">単発のToDoとして追加</option>${goals.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select><label>カテゴリー（後から変更できます）</label><select id="taskCategory">${state.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select><label>実行日</label><input type="date" id="taskDate" value="${initialDate}" required><label>実行時間（分・任意）</label><input type="number" id="taskMinutes" min="0" max="1440" placeholder="例：30"><label>メモ（任意）</label><textarea id="taskNote" rows="2"></textarea><div class="modal-actions"><button class="btn" type="submit">追加する</button></div></form>`,()=>{$('#taskGoal').onchange=()=>{const g=goalById($('#taskGoal').value);if(g)$('#taskCategory').value=g.category||'未分類';};$('#taskForm').onsubmit=async e=>{e.preventDefault();const goalId=$('#taskGoal').value||null;const t={id:uid(),title:$('#taskTitle').value.trim(),goalId,category:$('#taskCategory').value,date:$('#taskDate').value,status:'open',minutes:Number($('#taskMinutes').value)||0,note:$('#taskNote').value.trim(),createdAt:new Date().toISOString(),deleted:false};state.tasks.push(t);state.selectedDate=t.date;state.viewMonth=monthKey(t.date);await save();closeModal();activeTab='month';render();};}); };
-  const openTaskActions = id => { const t=state.tasks.find(x=>x.id===id);if(!t)return;openModal('ToDoの操作',`<div class="note"><b>${esc(t.title)}</b><br>${fmtDate(t.date)} ・ ${t.status==='done'?'完了':'未完了'}<br>カテゴリー：${esc(taskCategory(t))}</div><div style="display:grid;gap:9px;margin-top:15px"><button class="btn secondary" id="editTask">内容・日付・カテゴリーを編集</button><button class="btn secondary" id="moveTomorrow">翌日に移動</button><button class="btn secondary" id="carryTask">別の日に移動</button><button class="btn danger" id="deleteTask">削除する</button></div>`,()=>{
-      $('#editTask').onclick=()=>{closeModal();openEditTask(t);};
-      $('#moveTomorrow').onclick=async()=>{const d=parseDate(t.date);d.setDate(d.getDate()+1);t.date=iso(d);state.selectedDate=t.date;state.viewMonth=monthKey(t.date);await save();closeModal();render();};
-      $('#carryTask').onclick=()=>{const body=`<label>移動先の日付</label><input id="moveDate" type="date" value="${t.date}"><div class="modal-actions"><button class="btn" id="confirmMove">この日に移動</button></div>`;openModal('ToDoを別の日に移動',body,()=>{$('#confirmMove').onclick=async()=>{t.date=$('#moveDate').value;state.selectedDate=t.date;state.viewMonth=monthKey(t.date);await save();closeModal();render();};});};
-      $('#deleteTask').onclick=async()=>{if(!confirm('このToDoを削除しますか？'))return;t.deleted=true;await save();closeModal();render();};
-    }); };
-  const openEditTask = t => openModal('ToDoを編集',`<form id="editTaskForm"><label>内容</label><input id="editTitle" required value="${esc(t.title)}"><label>カテゴリー</label><select id="editCategory">${state.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select><label>関連する月間目標</label><select id="editGoal"><option value="">紐づけない</option>${goalsForMonth().map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select><label>実行日</label><input id="editDate" type="date" value="${t.date}"><label>実行時間（分）</label><input id="editMinutes" type="number" min="0" value="${t.minutes||0}"><label>メモ</label><textarea id="editNote" rows="2">${esc(t.note||'')}</textarea><div class="modal-actions"><button class="btn" type="submit">保存</button></div></form>`,()=>{$('#editCategory').value=taskCategory(t);$('#editGoal').value=t.goalId||'';$('#editTaskForm').onsubmit=async e=>{e.preventDefault();t.title=$('#editTitle').value.trim();t.category=$('#editCategory').value;t.goalId=$('#editGoal').value||null;t.date=$('#editDate').value;t.minutes=Number($('#editMinutes').value)||0;t.note=$('#editNote').value;state.selectedDate=t.date;state.viewMonth=monthKey(t.date);await save();closeModal();render();};});
-  const showCarryPrompt = async () => {
-    const overdue=state.tasks.filter(t=>!t.deleted&&t.status==='open'&&t.date<todayISO());
-    if(!overdue.length)return;
-    const dismissed=localStorage.getItem('habit-log-carry-dismissed');if(dismissed===todayISO())return;
-    const list=overdue.slice(0,8).map(t=>`<div class="task"><div class="task-info"><div class="task-title">${esc(t.title)}</div><div class="task-sub">${fmtDate(t.date)}</div></div><button class="btn secondary" data-carry-one="${t.id}">今日へ</button></div>`).join('');
-    openModal('未完了のToDoがあります',`<p class="muted small">前の日に完了できなかったToDoです。今日に引き継ぐか、元の日付に残すか選べます。</p>${list}<div class="modal-actions"><button class="btn secondary" id="leaveAll">元の日付に残す</button><button class="btn" id="carryAll">すべて今日へ</button></div>`,()=>{
-      document.querySelectorAll('[data-carry-one]').forEach(b=>b.onclick=async()=>{const t=state.tasks.find(x=>x.id===b.dataset.carryOne);if(t)t.date=todayISO();state.selectedDate=todayISO();state.viewMonth=monthKey(todayISO());await save();closeModal();render();});
-      $('#leaveAll').onclick=()=>{localStorage.setItem('habit-log-carry-dismissed',todayISO());closeModal();};
-      $('#carryAll').onclick=async()=>{overdue.forEach(t=>t.date=todayISO());state.selectedDate=todayISO();state.viewMonth=monthKey(todayISO());await save();closeModal();render();};
-    });
-  };
-  const toast = msg => { const el=document.createElement('div');el.textContent=msg;Object.assign(el.style,{position:'fixed',bottom:'calc(95px + env(safe-area-inset-bottom))',left:'50%',transform:'translateX(-50%)',background:'#263f33',color:'#fff',padding:'11px 16px',borderRadius:'12px',fontSize:'13px',zIndex:50,boxShadow:'0 5px 20px #0003'});document.body.append(el);setTimeout(()=>el.remove(),2200); };
-  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;render();});
-  $('#prevMonth').onclick=()=>{const [y,m]=state.viewMonth.split('-').map(Number);state.viewMonth=monthKey(iso(new Date(y,m-2,1)));save().then(render);};
-  $('#nextMonth').onclick=()=>{const [y,m]=state.viewMonth.split('-').map(Number);state.viewMonth=monthKey(iso(new Date(y,m,1)));save().then(render);};
-  const start = async()=>{try{await load();}catch(e){console.error(e);try{state=JSON.parse(localStorage.getItem('habit-log-fallback'))||defaultState();}catch{state=defaultState();}}render();showCarryPrompt();};
-  start();
-})();
+const KEY='habitlog_integrated_v1';
+const today=()=>new Date().toISOString().slice(0,10);
+const month=()=>today().slice(0,7);
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+let db={goals:[],nodes:[],links:[],todos:[],monthly:[],categories:['仕事','健康','勉強','家族','お金','生活'],reflections:[]};
+function load(){try{const s=localStorage.getItem(KEY);if(s){const d=JSON.parse(s);db={...db,...d}}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db));document.getElementById('saveStatus').textContent='保存済み · '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}catch(e){document.getElementById('saveStatus').textContent='保存できませんでした。JSONバックアップを確認してください。'}}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===p));document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render()}
+function openModal(title,html){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=html;document.getElementById('modal').classList.add('show')}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function openGoal(id){const g=db.goals.find(x=>x.id===id);openModal(id?'目標を編集':'大きな目標を追加',`<div class="field"><label>目標名</label><input id="goalName" value="${esc(g?.name||'')}" placeholder="例：健康な身体をつくる"></div><div class="field"><label>説明（任意）</label><textarea id="goalDesc">${esc(g?.desc||'')}</textarea></div><button class="primary" onclick="saveGoal('${id||''}')">保存</button>`)}
+function saveGoal(id){const name=document.getElementById('goalName').value.trim();if(!name)return alert('目標名を入力してください');if(id){let g=db.goals.find(x=>x.id===id);g.name=name;g.desc=document.getElementById('goalDesc').value}else db.goals.push({id:uid(),name,desc:document.getElementById('goalDesc').value,order:db.goals.length});save();closeModal();render()}
+function moveGoal(id,dir){const a=db.goals.sort((x,y)=>x.order-y.order),i=a.findIndex(x=>x.id===id),j=i+dir;if(j<0||j>=a.length)return;[a[i].order,a[j].order]=[a[j].order,a[i].order];save();render()}
+function deleteGoal(id){if(!confirm('この目標と配下の項目を削除しますか？'))return;const ids=db.nodes.filter(n=>n.goalId===id).map(n=>n.id);db.goals=db.goals.filter(g=>g.id!==id);db.nodes=db.nodes.filter(n=>n.goalId!==id);db.links=db.links.filter(l=>!ids.includes(l.from)||!ids.includes(l.to));db.todos=db.todos.filter(t=>!ids.includes(t.nodeId));save();render()}
+function openNode(goalId,parentId,id){const n=db.nodes.find(x=>x.id===id);const kind=n?.kind||'action';openModal(id?'項目を編集':'ツリー項目を追加',`<div class="field"><label>項目名</label><input id="nodeName" value="${esc(n?.name||'')}" placeholder="例：週3回筋トレ"></div><div class="field"><label>種類</label><select id="nodeKind"><option value="idea" ${kind==='idea'?'selected':''}>アイデア</option><option value="goal" ${kind==='goal'?'selected':''}>目標</option><option value="action" ${kind==='action'?'selected':''}>行動（ToDo登録可能）</option></select></div><div class="field"><label>説明（任意）</label><textarea id="nodeDesc">${esc(n?.desc||'')}</textarea></div><button class="primary" onclick="saveNode('${goalId}','${parentId||''}','${id||''}')">保存</button> ${id?`<button class="danger" onclick="deleteNode('${id}')">削除</button>`:''}`)}
+function saveNode(goalId,parentId,id){const name=document.getElementById('nodeName').value.trim();if(!name)return alert('項目名を入力してください');const kind=document.getElementById('nodeKind').value,desc=document.getElementById('nodeDesc').value;if(id){Object.assign(db.nodes.find(x=>x.id===id),{name,kind,desc})}else db.nodes.push({id:uid(),goalId,parentId:parentId||null,name,kind,desc,collapsed:false,order:db.nodes.filter(x=>x.parentId===(parentId||null)&&x.goalId===goalId).length});save();closeModal();render()}
+function descendants(id){let out=[id],kids=db.nodes.filter(n=>n.parentId===id);kids.forEach(k=>out.push(...descendants(k.id)));return out}
+function deleteNode(id){if(!confirm('この項目と子項目を削除しますか？'))return;const ids=descendants(id);db.nodes=db.nodes.filter(n=>!ids.includes(n.id));db.links=db.links.filter(l=>!ids.includes(l.from)&&!ids.includes(l.to));db.todos=db.todos.filter(t=>!ids.includes(t.nodeId));save();closeModal();render()}
+function toggleCollapse(id){const n=db.nodes.find(x=>x.id===id);n.collapsed=!n.collapsed;save();render()}
+function openLink(from){const opts=db.nodes.filter(n=>n.id!==from).map(n=>`<option value="${n.id}">${esc(db.goals.find(g=>g.id===n.goalId)?.name||'目標')} › ${esc(n.name)}</option>`).join('');if(!opts)return alert('接続できる別の項目がありません');openModal('関連項目を接続',`<div class="field"><label>接続先</label><select id="linkTo">${opts}</select></div><div class="field"><label>関係</label><select id="linkType"><option value="arrow">→ 行動・手順</option><option value="both">↔ 相互に関連</option><option value="dotted">点線・間接的な関連</option></select></div><button class="primary" onclick="saveLink('${from}')">接続する</button>`)}
+function saveLink(from){const to=document.getElementById('linkTo').value;if(db.links.some(l=>l.from===from&&l.to===to))return alert('すでに接続されています');db.links.push({id:uid(),from,to,type:document.getElementById('linkType').value});save();closeModal();render()}
+function unlink(id){db.links=db.links.filter(l=>l.id!==id);save();render()}
+function jumpNode(id){const n=db.nodes.find(x=>x.id===id);if(!n)return;showPage('home');setTimeout(()=>{const el=document.getElementById('goal-'+n.goalId);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.open=true}},50)}
+function nodeTodo(id){const n=db.nodes.find(x=>x.id===id);if(!n)return;openModal('今日のToDoに登録',`<p><b>${esc(n.name)}</b></p><div class="field"><label>登録日</label><input type="date" id="todoDate" value="${today()}"></div><div class="field"><label>カテゴリ</label><select id="todoCat">${db.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select></div><button class="primary" onclick="saveNodeTodo('${id}')">登録</button>`)}
+function saveNodeTodo(id){const n=db.nodes.find(x=>x.id===id);db.todos.push({id:uid(),text:n.name,date:document.getElementById('todoDate').value,category:document.getElementById('todoCat').value,done:false,nodeId:id,source:'node'});save();closeModal();showPage('today')}
+function renderNode(n){const children=db.nodes.filter(x=>x.parentId===n.id&&x.goalId===n.goalId).sort((a,b)=>a.order-b.order);const links=db.links.filter(l=>l.from===n.id||l.to===n.id);const done=db.todos.filter(t=>t.nodeId===n.id&&t.done).length;const total=db.todos.filter(t=>t.nodeId===n.id).length;return `<div class="node ${n.parentId?'':'root'}"><div class="row between"><div class="grow"><div class="name">${esc(n.name)} <span class="tag">${n.kind==='action'?'行動':n.kind==='goal'?'目標':'アイデア'}</span></div><div class="meta">${esc(n.desc||'')}${total?` · 実行 ${done}/${total}回`:''}</div></div><button class="small ghost" onclick="openNode('${n.goalId}','${n.parentId||''}','${n.id}')">編集</button></div><div class="node-actions"><button class="small" onclick="openNode('${n.goalId}','${n.id}')">＋ 子項目</button>${n.kind==='action'?`<button class="small" onclick="nodeTodo('${n.id}')">ToDo登録</button>`:''}<button class="small" onclick="openLink('${n.id}')">↗ 関連付け</button>${children.length?`<button class="small ghost" onclick="toggleCollapse('${n.id}')">${n.collapsed?'展開':'折りたたむ'}</button>`:''}</div>${links.map(l=>{const other=db.nodes.find(x=>x.id===(l.from===n.id?l.to:l.from));return other?`<div class="link-item"> ${l.type==='both'?'↔':l.type==='dotted'?'┄':'→'} <a href="#" onclick="jumpNode('${other.id}');return false">${esc(other.name)}</a> <button class="small danger" onclick="unlink('${l.id}')">解除</button></div>`:''}).join('')}${children.length&&!n.collapsed?`<div class="children">${children.map(renderNode).join('')}</div>`:''}</div>`}
+function renderHome(){const box=document.getElementById('goalList');if(!db.goals.length){box.innerHTML='<div class="empty">大きな目標を追加して、ツリーを作りましょう。</div>';return}box.innerHTML=db.goals.sort((a,b)=>a.order-b.order).map(g=>{const root=db.nodes.filter(n=>n.goalId===g.id&&!n.parentId).sort((a,b)=>a.order-b.order);return `<details class="card goal" id="goal-${g.id}" open><summary class="row between"><span class="grow"><b>${esc(g.name)}</b><div class="muted">${esc(g.desc||'')}</div></span><span class="tag">${db.nodes.filter(n=>n.goalId===g.id).length}項目</span></summary><div class="toolbar"><button class="small" onclick="openNode('${g.id}',null);event.preventDefault()">＋ 項目追加</button><button class="small ghost" onclick="openGoal('${g.id}');event.preventDefault()">目標編集</button><button class="small ghost" onclick="moveGoal('${g.id}',-1);event.preventDefault()">↑</button><button class="small ghost" onclick="moveGoal('${g.id}',1);event.preventDefault()">↓</button><button class="small danger" onclick="deleteGoal('${g.id}');event.preventDefault()">削除</button></div>${root.length?root.map(renderNode).join(''):'<div class="empty">最初の項目を追加してください。</div>'}</details>`}).join('')}
+function openTodo(){openModal('ToDoを追加',`<div class="field"><label>内容</label><input id="todoText" placeholder="今日やること"></div><div class="field"><label>日付</label><input type="date" id="todoNewDate" value="${today()}"></div><div class="field"><label>カテゴリ</label><select id="todoNewCat">${db.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select></div><button class="primary" onclick="saveTodo()">追加する</button>`)}
+function saveTodo(){const text=document.getElementById('todoText').value.trim();if(!text)return alert('内容を入力してください');db.todos.push({id:uid(),text,date:document.getElementById('todoNewDate').value,category:document.getElementById('todoNewCat').value,done:false,nodeId:null,source:'manual'});save();closeModal();render()}
+function toggleTodo(id){const t=db.todos.find(x=>x.id===id);t.done=!t.done;t.completedAt=t.done?today():null;save();render()}
+function deleteTodo(id){if(confirm('このToDoを削除しますか？')){db.todos=db.todos.filter(t=>t.id!==id);save();render()}}
+function renderToday(){document.getElementById('todayDate').textContent=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'long'});const arr=db.todos.filter(t=>t.date===today());const done=arr.filter(t=>t.done).length,rate=arr.length?Math.round(done/arr.length*100):0;document.getElementById('todayRate').textContent=rate+'%';document.getElementById('todayBar').style.width=rate+'%';document.getElementById('todayCount').textContent=`${done} / ${arr.length} 件完了`;document.getElementById('todayList').innerHTML=arr.length?arr.map(t=>`<div class="checkrow"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo('${t.id}')"><div class="grow"><div class="${t.done?'done':''}">${esc(t.text)}</div><div class="muted">${esc(t.category||'未分類')}${t.nodeId?' · マインドマップ連携':''}</div></div><button class="small danger" onclick="deleteTodo('${t.id}')">削除</button></div>`).join(''):'<div class="empty">今日のToDoはありません。</div>';const old=db.todos.filter(t=>t.date<today()&&!t.done);document.getElementById('carryArea').innerHTML=old.length?`<p>${old.length}件の未完了項目があります。</p><div class="toolbar"><button class="primary" onclick="carryTodos(true)">すべて今日に繰り越す</button><button class="ghost" onclick="carryTodos(false)">今回は繰り越さない</button></div>`:'<div class="muted">繰り越し対象はありません。</div>'}
+function carryTodos(yes){const old=db.todos.filter(t=>t.date<today()&&!t.done);if(yes)old.forEach(t=>t.date=today());else old.forEach(t=>t.skippedCarry=true);save();render()}
+function openMonthly(){openModal('月間目標を追加',`<div class="field"><label>目標・行動名</label><input id="monthlyText" placeholder="例：英語を毎日10分練習"></div><div class="field"><label>目標回数</label><input id="monthlyCount" type="number" min="1" value="12"></div><div class="field"><label>カテゴリ</label><select id="monthlyCat">${db.categories.map(c=>`<option>${esc(c)}</option>`).join('')}</select></div><div class="field"><label>自動登録</label><select id="monthlyRepeat"><option value="none">自動登録しない</option><option value="daily">毎日</option><option value="weekdays">曜日指定</option></select></div><div class="field"><label>曜日指定（複数選択）</label><div>${['日','月','火','水','木','金','土'].map((d,i)=>`<label style="display:inline-flex;gap:3px;margin:5px"><input type="checkbox" class="weekday" value="${i}" style="width:auto">${d}</label>`).join('')}</div></div><button class="primary" onclick="saveMonthly()">保存</button>`)}
+function saveMonthly(){const text=document.getElementById('monthlyText').value.trim();if(!text)return alert('内容を入力してください');const repeat=document.getElementById('monthlyRepeat').value,days=[...document.querySelectorAll('.weekday:checked')].map(x=>+x.value);db.monthly.push({id:uid(),text,target:+document.getElementById('monthlyCount').value||1,category:document.getElementById('monthlyCat').value,repeat,days,month:month()});save();closeModal();render()}
+function renderMonthly(){document.getElementById('monthLabel').textContent=month();const list=document.getElementById('monthlyList');list.innerHTML=db.monthly.filter(m=>m.month===month()).map(m=>{const count=db.todos.filter(t=>t.monthlyId===m.id&&t.done).length;return `<div class="card"><div class="row between"><b>${esc(m.text)}</b><button class="small danger" onclick="deleteMonthly('${m.id}')">削除</button></div><div class="muted">${esc(m.category)} · 目標 ${m.target}回 · 実績 ${count}回</div><div class="progress" style="margin:9px 0"><i style="width:${Math.min(100,count/m.target*100)}%"></i></div><div class="muted">自動登録：${m.repeat==='daily'?'毎日':m.repeat==='weekdays'?'曜日指定':'なし'} ${m.days?.map(d=>'日月火水木金土'[d]).join('・')||''}</div><button class="small" onclick="monthlyAddTodo('${m.id}')">今日のToDoに登録</button></div>`}).join('')||'<div class="empty">今月の目標はありません。</div>'}
+function monthlyAddTodo(id){const m=db.monthly.find(x=>x.id===id);db.todos.push({id:uid(),text:m.text,date:today(),category:m.category,done:false,nodeId:null,monthlyId:id,source:'monthly'});save();showPage('today')}
+function deleteMonthly(id){if(confirm('月間目標を削除しますか？')){db.monthly=db.monthly.filter(x=>x.id!==id);save();render()}}
+function addCategory(){const v=document.getElementById('newCategory').value.trim();if(v&&!db.categories.includes(v)){db.categories.push(v);save();render()}}
+function renderCategories(){document.getElementById('categoryList').innerHTML=db.categories.map(c=>`<span class="tag">${esc(c)} <a href="#" onclick="removeCategory('${esc(c)}');return false">×</a></span>`).join('')}
+function removeCategory(c){if(db.categories.length<=1)return alert('カテゴリは最低1つ必要です');if(confirm(c+'を削除しますか？')){db.categories=db.categories.filter(x=>x!==c);save();render()}}
+function renderAnalysis(){const all=db.todos,done=all.filter(t=>t.done),rate=all.length?Math.round(done.length/all.length*100):0;document.getElementById('allRate').textContent=rate+'%';document.getElementById('doneCount').textContent=done.length+'件';const m=db.monthly.filter(x=>x.month===month()),mp=m.length?Math.round(m.reduce((s,x)=>s+Math.min(1,db.todos.filter(t=>t.monthlyId===x.id&&t.done).length/x.target),0)/m.length*100):0;document.getElementById('monthRate').textContent=mp+'%';let streak=0,d=new Date();while(true){const ds=d.toISOString().slice(0,10),day=db.todos.filter(t=>t.date===ds);if(!day.length||!day.every(t=>t.done))break;streak++;d.setDate(d.getDate()-1)}document.getElementById('streak').textContent=streak+'日';document.getElementById('goalAnalysis').innerHTML=db.goals.map(g=>{const ids=db.nodes.filter(n=>n.goalId===g.id&&n.kind==='action').map(n=>n.id),ts=db.todos.filter(t=>ids.includes(t.nodeId)),r=ts.length?Math.round(ts.filter(t=>t.done).length/ts.length*100):0;return `<div class="card"><div class="row between"><b>${esc(g.name)}</b><b>${r}%</b></div><div class="progress" style="margin-top:8px"><i style="width:${r}%"></i></div><div class="muted">${ts.filter(t=>t.done).length}/${ts.length}件の行動ToDo完了</div></div>`}).join('')||'<div class="empty">目標がありません。</div>';document.getElementById('categoryAnalysis').innerHTML=db.categories.map(c=>{const ts=all.filter(t=>t.category===c),r=ts.length?Math.round(ts.filter(t=>t.done).length/ts.length*100):0;return `<div class="row between" style="margin:8px 0"><span>${esc(c)}</span><span class="muted">${r}%（${ts.filter(t=>t.done).length}/${ts.length}）</span></div>`}).join('');const actions=db.nodes.filter(n=>n.kind==='action'),untouched=actions.filter(n=>!db.todos.some(t=>t.nodeId===n.id)),used=actions.filter(n=>db.todos.some(t=>t.nodeId===n.id));document.getElementById('nodeAnalysis').innerHTML=`<div class="card"><div class="row between"><span>行動項目</span><b>${actions.length}件</b></div><div class="row between"><span>ToDo未登録</span><b>${untouched.length}件</b></div><div class="row between"><span>ToDo登録済み</span><b>${used.length}件</b></div>${untouched.map(n=>`<div class="link-item">${esc(n.name)} <span class="tag">未登録</span></div>`).join('')}</div>`;document.getElementById('linkAnalysis').innerHTML=db.links.length?db.links.map(l=>{const a=db.nodes.find(n=>n.id===l.from),b=db.nodes.find(n=>n.id===l.to);return a&&b?`<div class="link-item">${esc(a.name)} ${l.type==='both'?'↔':l.type==='dotted'?'┄':'→'} ${esc(b.name)}</div>`:''}).join(''):'<div class="muted">目標間の関連付けはまだありません。</div>'}
+function saveReflection(){const date=document.getElementById('reflectionDate').value||today(),item={date,good:document.getElementById('reflectionGood').value,bad:document.getElementById('reflectionBad').value,next:document.getElementById('reflectionNext').value};const i=db.reflections.findIndex(x=>x.date===date);if(i>=0)db.reflections[i]=item;else db.reflections.push(item);save();renderReflection();alert('振り返りを保存しました')}
+function renderReflection(){document.getElementById('reflectionDate').value=today();const r=db.reflections.slice().sort((a,b)=>b.date.localeCompare(a.date));document.getElementById('reflectionHistory').innerHTML=r.map(x=>`<div class="card"><b>${esc(x.date)}</b><p class="muted">できたこと</p>${esc(x.good||'—')}<p class="muted">改善したいこと</p>${esc(x.bad||'—')}<p class="muted">次の一歩</p>${esc(x.next||'—')}</div>`).join('')||'<div class="empty">振り返りはまだありません。</div>'}
+function exportData(){const blob=new Blob([JSON.stringify({...db,exportedAt:new Date().toISOString(),formatVersion:1},null,2)],{type:'application/json'});download(blob,'habit-log-backup-'+today()+'.json')}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!confirm('現在のデータをバックアップ内容で置き換えます。よろしいですか？'))return;db={...db,...d};save();render();alert('復元しました')}catch(err){alert('JSONファイルを読み込めませんでした')}};r.readAsText(f);e.target.value=''}
+function exportCSV(){const rows=[['日付','ToDo','カテゴリ','完了','ノードID'],...db.todos.map(t=>[t.date,t.text,t.category,t.done?'完了':'未完了',t.nodeId||''])];const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download(new Blob([csv],{type:'text/csv'}),'habit-log-todos-'+today()+'.csv')}
+function runRecurring(){const d=new Date(),day=d.getDay(),date=today();db.monthly.filter(m=>m.month===month()&&(m.repeat==='daily'||(m.repeat==='weekdays'&&m.days.includes(day)))).forEach(m=>{if(!db.todos.some(t=>t.monthlyId===m.id&&t.date===date))db.todos.push({id:uid(),text:m.text,date,category:m.category,done:false,nodeId:null,monthlyId:m.id,source:'monthly'})})}
+function render(){renderToday();renderMonthly();renderHome();renderAnalysis();renderCategories();renderReflection();document.getElementById('monthLabel').textContent=month()}
+load();runRecurring();save();document.getElementById('reflectionDate').value=today();render();
 </script>
-</body>
-</html>
+</body></html>
