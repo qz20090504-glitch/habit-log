@@ -3,7 +3,7 @@
 <style>
 :root{--green:#2f7654;--green2:#e4f1e8;--mint:#f3f8f4;--ink:#20352a;--muted:#718078;--line:#dce8df;--white:#fff;--red:#b94d4d;--shadow:0 5px 18px #244b3510}*{box-sizing:border-box}body{margin:0;background:#f5f8f5;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;padding-bottom:84px}header{padding:22px 18px 14px;background:linear-gradient(135deg,#e4f1e8,#f7faf7);border-bottom:1px solid var(--line)}header h1{margin:0;font-size:23px;color:var(--green)}header p{margin:5px 0 0;font-size:12px;color:var(--muted)}main{max-width:850px;margin:auto;padding:15px}.tabs{position:fixed;bottom:0;left:0;right:0;z-index:10;display:grid;grid-template-columns:repeat(5,1fr);background:#fffffff2;backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:7px 4px calc(7px + env(safe-area-inset-bottom))}.tab{border:0;background:none;color:#718078;font-size:10px;padding:5px 1px;display:flex;flex-direction:column;align-items:center;gap:3px}.tab b{font-size:19px;font-weight:500}.tab.active{color:var(--green);font-weight:700}.page{display:none}.page.active{display:block}.section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 13px}.section-title h2{font-size:19px;margin:0}.muted{color:var(--muted);font-size:12px}.card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0;box-shadow:var(--shadow)}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.between{display:flex;align-items:center;justify-content:space-between;gap:8px}.field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:115px;margin:5px 0}.field label{font-size:11px;color:var(--muted)}input,select,textarea{font:inherit;color:var(--ink);background:#fbfdfb;border:1px solid var(--line);border-radius:10px;padding:10px;width:100%;min-width:0}textarea{min-height:72px;resize:vertical}button{font:inherit;cursor:pointer}.btn{border:0;border-radius:10px;padding:9px 12px;background:var(--green);color:white;font-size:12px;font-weight:650}.btn.light{background:var(--green2);color:var(--green)}.btn.ghost{background:transparent;color:var(--green);border:1px solid var(--line)}.btn.danger{background:#faeeee;color:var(--red)}.btn.small{padding:6px 9px;font-size:11px}.pill{font-size:10px;padding:4px 8px;border-radius:20px;background:var(--green2);color:var(--green)}.todo{display:flex;align-items:flex-start;gap:10px;padding:11px 2px;border-bottom:1px solid #edf2ee}.todo:last-child{border:0}.todo input[type=checkbox]{width:20px;height:20px;accent-color:var(--green);margin:1px 0}.todo .name{flex:1;font-size:14px;overflow-wrap:anywhere}.done .name{text-decoration:line-through;color:#9aa69e}.todo small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 8px}.goal{border:1px solid var(--line);border-radius:13px;margin:9px 0;background:#fff;overflow:hidden}.goal-head{display:flex;align-items:center;gap:7px;padding:11px}.goal-title{flex:1;font-weight:700;font-size:14px;overflow-wrap:anywhere}.goal-body{padding:0 12px 12px 28px}.node{border-left:2px solid #d8e8dc;margin-left:5px;padding:5px 0 5px 12px}.node-row{display:flex;align-items:center;gap:6px}.node-label{flex:1;font-size:13px;overflow-wrap:anywhere}.node-children{margin-left:9px}.iconbtn{border:0;background:none;color:var(--muted);padding:4px;font-size:15px}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.stat{background:var(--mint);border-radius:13px;padding:13px}.stat strong{display:block;font-size:23px;color:var(--green)}.stat span{font-size:11px;color:var(--muted)}.bar{height:8px;background:#edf2ee;border-radius:9px;overflow:hidden;margin:7px 0}.bar i{display:block;height:100%;background:#6ba982;border-radius:9px}.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.day{background:#f7faf7;border-radius:8px;min-height:44px;padding:5px 2px;text-align:center;font-size:10px}.day.today{outline:2px solid var(--green)}.day em{display:block;font-style:normal;font-size:9px;color:var(--green);margin-top:3px}.dayhead{font-size:10px;text-align:center;color:var(--muted)}.hidden{display:none!important}.subtle{font-size:11px;color:var(--muted)}.divider{height:1px;background:var(--line);margin:12px 0}.notice{background:#f1f7f2;border-radius:10px;padding:10px;font-size:11px;color:#587363;line-height:1.6}.actions{display:flex;gap:5px;flex-wrap:wrap}.goal-actions{display:flex;gap:5px}.monthly-item{padding:11px 0;border-bottom:1px solid #edf2ee}.monthly-item:last-child{border:0}.progress-label{font-size:11px;color:var(--muted)}
 </style></head><body>
-<header><h1>🌱 Habit Log</h1><p>毎日の小さな行動を、大きな目標につなげる</p></header><main>
+<header><h1>🌱 Habit Log</h1><p>毎日の小さな行動を、大きな目標につなげる</p><p id="saveStatus" role="status" style="margin-top:8px;font-weight:600">保存データを確認しています…</p></header><div id="loadLock" style="position:fixed;inset:0;background:#f5f8f5;z-index:99;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center"><div><b>保存データを確認しています</b><p>読み込みが終わるまでお待ちください。</p></div></div><main>
 <section id="today" class="page active"><div class="section-title"><h2>今日のToDo</h2><span class="pill" id="todayDate"></span></div><div class="card"><div class="row"><div class="field"><label>ToDoを追加</label><input id="todoInput" placeholder="今日やることを入力"></div><div class="field" style="max-width:130px"><label>カテゴリー</label><select id="todoCategory"></select></div><button class="btn" style="align-self:end" onclick="addTodo()">追加</button></div></div><div class="card"><div class="between"><b>今日のリスト</b><span class="muted" id="todayCount"></span></div><div id="todayList"></div></div><div class="card"><b>月間ToDoから追加</b><p class="muted">月間ToDoを選ぶと、今日のリストに追加できます。</p><div id="monthlyPicker"></div></div></section>
 <section id="monthly" class="page"><div class="section-title"><h2>月間ToDo</h2><span class="pill" id="monthLabel"></span></div><div class="card"><b>月間ToDoを作成</b><div class="field"><label>内容</label><input id="monthlyInput" placeholder="例：英語を20回勉強する"></div><div class="row"><div class="field"><label>月間目標回数</label><input id="monthlyTarget" type="number" min="1" value="12"></div><div class="field"><label>カテゴリー</label><select id="monthlyCategory"></select></div><div class="field"><label>アイコン</label><select id="monthlyIcon"><option>🎯</option><option>📚</option><option>💪</option><option>🏡</option><option>💰</option><option>🌱</option><option>🧹</option><option>✍️</option><option>⭐</option></select></div></div><div class="field"><label>自動登録</label><select id="monthlyRepeat"><option value="none">なし（必要な日に手動追加）</option><option value="daily">毎日</option><option value="weekday">選択した曜日</option></select></div><div id="weekdayOptions" class="row hidden">月〜日 <span id="weekdayChecks"></span></div><button class="btn" onclick="addMonthly()">月間ToDoを登録</button></div><div class="card"><div class="between"><b>今月の進捗</b><span id="monthlyTotal" class="muted"></span></div><div id="monthlyList"></div></div></section>
 <section id="home" class="page"><div class="section-title"><h2>大きな目標</h2><button class="btn" onclick="addGoal()">＋ 目標を追加</button></div><div class="notice">目標を起点に、行動を階層的に整理できます。行動は何段階でも追加でき、月間ToDoとして登録できます。</div><div id="goalList"></div></section>
@@ -13,10 +13,94 @@
 <script>
 const KEY='habit-log-integrated-v3';const todayKey=()=>new Date().toISOString().slice(0,10);const monthKey=()=>todayKey().slice(0,7);const uid=()=>Math.random().toString(36).slice(2,10);const days=['日','月','火','水','木','金','土'];
 let db={todos:[],monthly:[],goals:[],categories:['学習','運動','家庭菜園','お金','読書','家事','その他'],reflections:{},settings:{}};
-// IndexedDB is the primary store; localStorage is a compatibility fallback.
-let idb=null;function openDB(){return new Promise((resolve)=>{if(!('indexedDB'in window)){resolve(null);return}let r=indexedDB.open('HabitLogDB',1);r.onupgradeneeded=()=>r.result.createObjectStore('data');r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)})}
-async function load(){idb=await openDB();if(idb){try{let value=await new Promise((res,rej)=>{let tx=idb.transaction('data','readonly');let q=tx.objectStore('data').get('main');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});if(value)db=value;else{let old=localStorage.getItem(KEY);if(old){db=JSON.parse(old);await persist()}}}catch(e){}}else{try{let old=localStorage.getItem(KEY);if(old)db=JSON.parse(old)}catch(e){}}db.todos??=[];db.monthly??=[];db.goals??=[];db.categories??=['学習','運動','家庭菜園','お金','読書','家事','その他'];db.reflections??={};render()}
-async function persist(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}if(idb){try{await new Promise((res,rej)=>{let tx=idb.transaction('data','readwrite');tx.objectStore('data').put(db,'main');tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}catch(e){}}}
+// Robust persistence: IndexedDB + localStorage, with explicit failure reporting.
+let idb=null, loaded=false, lastSaveError='';
+function setSaveStatus(message,isError=false){const el=document.getElementById('saveStatus');if(el){el.textContent=message;el.style.color=isError?'#b94d4d':'#2f7654'}}
+function withTimeout(promise,ms,label){
+  return Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+'（タイムアウト）')),ms))]);
+}
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window)){resolve(null);return}
+    let r,settled=false;
+    const finish=(fn,v)=>{if(!settled){settled=true;fn(v)}};
+    try{r=indexedDB.open('HabitLogDB',1)}catch(e){finish(reject,e);return}
+    r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('data'))r.result.createObjectStore('data')};
+    r.onsuccess=()=>finish(resolve,r.result);
+    r.onerror=()=>finish(reject,r.error||new Error('IndexedDBを開けません'));
+    r.onblocked=()=>finish(reject,new Error('IndexedDBが別の画面で使用中です'));
+  });
+}
+function readIDB(){
+  return new Promise((resolve,reject)=>{
+    if(!idb){resolve(undefined);return}
+    let tx;try{
+      tx=idb.transaction('data','readonly');
+      let q=tx.objectStore('data').get('main');
+      q.onsuccess=()=>resolve(q.result);
+      q.onerror=()=>reject(q.error||new Error('IndexedDB読み込み失敗'));
+      tx.onerror=()=>reject(tx.error||new Error('IndexedDB読み込み失敗'));
+      tx.onabort=()=>reject(tx.error||new Error('IndexedDB読み込み中断'));
+    }catch(e){reject(e)}
+  });
+}
+function writeIDB(value){
+  return new Promise((resolve,reject)=>{
+    if(!idb){reject(new Error('IndexedDBが利用できません'));return}
+    let tx;try{
+      tx=idb.transaction('data','readwrite');
+      tx.objectStore('data').put(value,'main');
+      tx.oncomplete=()=>resolve();
+      tx.onerror=()=>reject(tx.error||new Error('IndexedDB保存失敗'));
+      tx.onabort=()=>reject(tx.error||new Error('IndexedDB保存中断'));
+    }catch(e){reject(e)}
+  });
+}
+function validData(x){return x&&Array.isArray(x.todos)&&Array.isArray(x.monthly)&&Array.isArray(x.goals)}
+async function load(){
+  let idbError=null,localError=null,idbValue,localValue;
+  try{
+    idb=await withTimeout(openDB(),5000,'IndexedDBの起動');
+    if(idb) idbValue=await withTimeout(readIDB(),5000,'IndexedDBの読み込み');
+  }catch(e){idbError=e;idb=null}
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw)localValue=JSON.parse(raw);
+  }catch(e){localError=e}
+  if(idbValue!==undefined&&idbValue!==null){
+    if(!validData(idbValue))throw new Error('IndexedDB内の保存データ形式を確認できません。初期化せず停止しました。');
+    db=idbValue;
+  }else if(localValue){
+    if(!validData(localValue))throw new Error('端末内の保存データ形式を確認できません。初期化せず停止しました。');
+    db=localValue;
+  }else if(localError){
+    throw new Error('端末内の保存データを読み取れません。データ保護のため初期化を中止しました。');
+  }
+  db.todos??=[];db.monthly??=[];db.goals??=[];db.categories??=['学習','運動','家庭菜園','お金','読書','家事','その他'];db.reflections??={};db.settings??={};
+  loaded=true;
+  try{await withTimeout(persist(),5000,'初回保存')}catch(e){console.warn(e)}
+  render();
+  document.getElementById('loadLock').style.display='none';
+  if(idbError)setSaveStatus('注意：IndexedDBを利用できません。予備保存を使用します',true);
+  else setSaveStatus('✓ この端末に保存しています');
+}
+async function persist(){
+  if(!loaded && !idb) return;
+  const snapshot=JSON.stringify(db);let ok=[];let errors=[];
+  try{localStorage.setItem(KEY,snapshot);ok.push('端末内予備保存')}catch(e){errors.push('予備保存: '+e.message)}
+  if(idb){
+    try{await withTimeout(writeIDB(db),5000,'IndexedDB保存');ok.push('データベース保存')}
+    catch(e){errors.push('データベース: '+e.message)}
+  }
+  if(!ok.length){
+    lastSaveError=errors.join(' / ');
+    setSaveStatus('⚠ 保存できませんでした。JSONバックアップを確認してください',true);
+    throw new Error(lastSaveError);
+  }
+  lastSaveError='';
+  setSaveStatus(errors.length?'⚠ '+ok.join('・')+'（一部保存不可）':'✓ 保存しました'+(ok.length===2?'（二重保存）':''),!!errors.length);
+  if(navigator.storage&&navigator.storage.persist){try{await navigator.storage.persist()}catch(e){}}
+}
 function showPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.page===id));render()}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function catOptions(selected=''){return db.categories.map(c=>`<option ${c===selected?'selected':''}>${esc(c)}</option>`).join('')}
 function render(){let d=todayKey(),m=monthKey();document.getElementById('todayDate').textContent=d;document.getElementById('monthLabel').textContent=m;document.getElementById('analysisMonth').textContent=m;document.getElementById('reflectionDate').textContent=d;['todoCategory','monthlyCategory'].forEach(id=>document.getElementById(id).innerHTML=catOptions());renderToday();renderMonthly();renderGoals();renderAnalysis();renderReflection();renderCategories()}
@@ -37,5 +121,19 @@ function addCategory(){let v=document.getElementById('newCategory').value.trim()
 function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='habit-log-backup-'+todayKey()+'.json';a.click();URL.revokeObjectURL(a.href)}function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.todos||!x.monthly||!x.goals)throw Error();if(confirm('現在のデータをバックアップ内容で置き換えますか？')){db=x;persist().then(render)}}catch(err){alert('読み込めるバックアップファイルではありません')}e.target.value=''};r.readAsText(f)}function exportCSV(){let rows=[['date','title','category','done','monthlyId'],...db.todos.map(t=>[t.date,t.title,t.category,t.done?'1':'0',t.monthlyId||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='habit-log-todos-'+todayKey()+'.csv';a.click();URL.revokeObjectURL(a.href)}
 // Auto-add recurring monthly items for today's date, without duplicates.
 function applyRepeats(){let d=new Date(),weekday=d.getDay(),date=todayKey();for(let x of db.monthly){let applies=x.repeat==='daily'||(x.repeat==='weekday'&&(x.weekdays||[]).includes(weekday));if(applies&&!db.todos.some(t=>t.date===date&&t.monthlyId===x.id))db.todos.push({id:uid(),title:x.title,category:x.category,date,done:false,monthlyId:x.id})}persist()}
-load().then(()=>applyRepeats().then(render));
+function showStartupHelp(message){
+  const lock=document.getElementById('loadLock');
+  lock.style.display='flex';
+  lock.innerHTML='<div style="max-width:440px;line-height:1.7"><b>Habit LogをSafariで開いてください</b><p>'+message+'</p><p>この画面はiPhoneの「ファイル」アプリ内のHTMLプレビューで開かれている可能性があります。プレビューでは保存領域が使えないことがあり、記録を安全に保存できません。</p><p><b>更新方法</b><br>① この画面を閉じる<br>② HTMLをGitHub Pagesの既存の index.html と置き換える<br>③ 公開URLをSafariで開く<br>④ Safariの共有メニューから「ホーム画面に追加」した既存アプリを使う</p><p>※ホーム画面アプリとHTMLプレビューは別の保存領域です。プレビュー上で初期化や新規記録をしないでください。</p></div>';
+  setSaveStatus('⚠ Safariで開く必要があります',true);
+}
+if(location.protocol==='file:'){
+  showStartupHelp('ダウンロードしたHTMLファイルを直接開いています。');
+}else{
+  load().then(()=>applyRepeats().then(render)).catch(err=>{
+    console.error(err);setSaveStatus('⚠ '+(err.message||'読み込みに失敗しました'),true);
+    const lock=document.getElementById('loadLock');lock.style.display='flex';
+    lock.innerHTML='<div style="max-width:420px"><b>保存データを読み込めませんでした</b><p>データを消さないため、自動で初期化していません。</p><p style="color:#b94d4d">'+esc(err.message||'不明なエラー')+'</p><button class="btn" onclick="location.reload()">もう一度読み込む</button><p style="font-size:12px;margin-top:14px">解決しない場合は、以前のHabit LogからJSONバックアップを取り出して保管してください。</p></div>';
+  });
+}
 </script></body></html>
