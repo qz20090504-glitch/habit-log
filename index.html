@@ -16,89 +16,28 @@ let db={todos:[],monthly:[],goals:[],categories:['学習','運動','家庭菜園
 // Robust persistence: IndexedDB + localStorage, with explicit failure reporting.
 let idb=null, loaded=false, lastSaveError='';
 function setSaveStatus(message,isError=false){const el=document.getElementById('saveStatus');if(el){el.textContent=message;el.style.color=isError?'#b94d4d':'#2f7654'}}
-function withTimeout(promise,ms,label){
-  return Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+'（タイムアウト）')),ms))]);
-}
-function openDB(){
-  return new Promise((resolve,reject)=>{
-    if(!('indexedDB' in window)){resolve(null);return}
-    let r,settled=false;
-    const finish=(fn,v)=>{if(!settled){settled=true;fn(v)}};
-    try{r=indexedDB.open('HabitLogDB',1)}catch(e){finish(reject,e);return}
-    r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('data'))r.result.createObjectStore('data')};
-    r.onsuccess=()=>finish(resolve,r.result);
-    r.onerror=()=>finish(reject,r.error||new Error('IndexedDBを開けません'));
-    r.onblocked=()=>finish(reject,new Error('IndexedDBが別の画面で使用中です'));
-  });
-}
-function readIDB(){
-  return new Promise((resolve,reject)=>{
-    if(!idb){resolve(undefined);return}
-    let tx;try{
-      tx=idb.transaction('data','readonly');
-      let q=tx.objectStore('data').get('main');
-      q.onsuccess=()=>resolve(q.result);
-      q.onerror=()=>reject(q.error||new Error('IndexedDB読み込み失敗'));
-      tx.onerror=()=>reject(tx.error||new Error('IndexedDB読み込み失敗'));
-      tx.onabort=()=>reject(tx.error||new Error('IndexedDB読み込み中断'));
-    }catch(e){reject(e)}
-  });
-}
-function writeIDB(value){
-  return new Promise((resolve,reject)=>{
-    if(!idb){reject(new Error('IndexedDBが利用できません'));return}
-    let tx;try{
-      tx=idb.transaction('data','readwrite');
-      tx.objectStore('data').put(value,'main');
-      tx.oncomplete=()=>resolve();
-      tx.onerror=()=>reject(tx.error||new Error('IndexedDB保存失敗'));
-      tx.onabort=()=>reject(tx.error||new Error('IndexedDB保存中断'));
-    }catch(e){reject(e)}
-  });
-}
+function openDB(){return new Promise((resolve,reject)=>{if(!('indexedDB' in window)){reject(new Error('このブラウザではIndexedDBを利用できません'));return}let settled=false;const timer=setTimeout(()=>{if(!settled){settled=true;reject(new Error('IndexedDBの起動確認がタイムアウトしました'))}},2500);let r;try{r=indexedDB.open('HabitLogDB',1)}catch(e){clearTimeout(timer);reject(e);return}r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('data'))r.result.createObjectStore('data')};r.onsuccess=()=>{if(!settled){settled=true;clearTimeout(timer);resolve(r.result)}else{try{r.result.close()}catch(e){}}};r.onerror=()=>{if(!settled){settled=true;clearTimeout(timer);reject(r.error||new Error('IndexedDBを開けません'))}};r.onblocked=()=>{if(!settled){settled=true;clearTimeout(timer);reject(new Error('IndexedDBが別の画面で使用中です'))}}})}
+function readIDB(){return new Promise((resolve,reject)=>{if(!idb){resolve(undefined);return}let tx;try{tx=idb.transaction('data','readonly');let q=tx.objectStore('data').get('main');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('IndexedDB読み込み失敗'));tx.onerror=()=>reject(tx.error||new Error('IndexedDB読み込み失敗'))}catch(e){reject(e)}})}
+function writeIDB(value){return new Promise((resolve,reject)=>{if(!idb){reject(new Error('IndexedDBが利用できません'));return}let tx;try{tx=idb.transaction('data','readwrite');tx.objectStore('data').put(value,'main');tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||new Error('IndexedDB保存失敗'));tx.onabort=()=>reject(tx.error||new Error('IndexedDB保存中断'))}catch(e){reject(e)}})}
 function validData(x){return x&&Array.isArray(x.todos)&&Array.isArray(x.monthly)&&Array.isArray(x.goals)}
 async function load(){
   let idbError=null,localError=null,idbValue,localValue;
-  try{
-    idb=await withTimeout(openDB(),5000,'IndexedDBの起動');
-    if(idb) idbValue=await withTimeout(readIDB(),5000,'IndexedDBの読み込み');
-  }catch(e){idbError=e;idb=null}
-  try{
-    const raw=localStorage.getItem(KEY);
-    if(raw)localValue=JSON.parse(raw);
-  }catch(e){localError=e}
-  if(idbValue!==undefined&&idbValue!==null){
-    if(!validData(idbValue))throw new Error('IndexedDB内の保存データ形式を確認できません。初期化せず停止しました。');
-    db=idbValue;
-  }else if(localValue){
-    if(!validData(localValue))throw new Error('端末内の保存データ形式を確認できません。初期化せず停止しました。');
-    db=localValue;
-  }else if(localError){
-    throw new Error('端末内の保存データを読み取れません。データ保護のため初期化を中止しました。');
-  }
+  try{idb=await openDB();idbValue=await Promise.race([readIDB(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('IndexedDB読み込みがタイムアウトしました')),2500))])}catch(e){idbError=e;idb=null}
+  try{const raw=localStorage.getItem(KEY);if(raw)localValue=JSON.parse(raw)}catch(e){localError=e}
+  if(idbValue!==undefined&&idbValue!==null){if(!validData(idbValue))throw new Error('IndexedDB内の保存データ形式を確認できません。初期化せず停止しました。');db=idbValue}
+  else if(localValue){if(!validData(localValue))throw new Error('端末内の保存データ形式を確認できません。初期化せず停止しました。');db=localValue}
+  else if(localError&&!idbError){throw new Error('バックアップ保存領域を読み取れません。データ保護のため初期化を中止しました。')}
   db.todos??=[];db.monthly??=[];db.goals??=[];db.categories??=['学習','運動','家庭菜園','お金','読書','家事','その他'];db.reflections??={};db.settings??={};
-  loaded=true;
-  try{await withTimeout(persist(),5000,'初回保存')}catch(e){console.warn(e)}
-  render();
-  document.getElementById('loadLock').style.display='none';
-  if(idbError)setSaveStatus('注意：IndexedDBを利用できません。予備保存を使用します',true);
-  else setSaveStatus('✓ この端末に保存しています');
+  loaded=true;await persist();render();document.getElementById('loadLock').style.display='none';
+  if(idbError)setSaveStatus('注意：IndexedDBが使えないため、端末内の予備保存を使用中です',true);else setSaveStatus('✓ この端末に保存しています');
 }
 async function persist(){
   if(!loaded && !idb) return;
   const snapshot=JSON.stringify(db);let ok=[];let errors=[];
   try{localStorage.setItem(KEY,snapshot);ok.push('端末内予備保存')}catch(e){errors.push('予備保存: '+e.message)}
-  if(idb){
-    try{await withTimeout(writeIDB(db),5000,'IndexedDB保存');ok.push('データベース保存')}
-    catch(e){errors.push('データベース: '+e.message)}
-  }
-  if(!ok.length){
-    lastSaveError=errors.join(' / ');
-    setSaveStatus('⚠ 保存できませんでした。JSONバックアップを確認してください',true);
-    throw new Error(lastSaveError);
-  }
-  lastSaveError='';
-  setSaveStatus(errors.length?'⚠ '+ok.join('・')+'（一部保存不可）':'✓ 保存しました'+(ok.length===2?'（二重保存）':''),!!errors.length);
+  try{await writeIDB(db);ok.push('データベース保存')}catch(e){errors.push('データベース: '+e.message)}
+  if(!ok.length){lastSaveError=errors.join(' / ');setSaveStatus('⚠ 保存できませんでした。操作を続けずバックアップを確認してください',true);throw new Error(lastSaveError)}
+  lastSaveError='';setSaveStatus(errors.length?'⚠ '+ok.join('・')+'（一部保存不可）':'✓ 保存しました'+(ok.length===2?'（二重保存）':''),!!errors.length);
   if(navigator.storage&&navigator.storage.persist){try{await navigator.storage.persist()}catch(e){}}
 }
 function showPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.page===id));render()}
@@ -121,19 +60,6 @@ function addCategory(){let v=document.getElementById('newCategory').value.trim()
 function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='habit-log-backup-'+todayKey()+'.json';a.click();URL.revokeObjectURL(a.href)}function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.todos||!x.monthly||!x.goals)throw Error();if(confirm('現在のデータをバックアップ内容で置き換えますか？')){db=x;persist().then(render)}}catch(err){alert('読み込めるバックアップファイルではありません')}e.target.value=''};r.readAsText(f)}function exportCSV(){let rows=[['date','title','category','done','monthlyId'],...db.todos.map(t=>[t.date,t.title,t.category,t.done?'1':'0',t.monthlyId||''])];let csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='habit-log-todos-'+todayKey()+'.csv';a.click();URL.revokeObjectURL(a.href)}
 // Auto-add recurring monthly items for today's date, without duplicates.
 function applyRepeats(){let d=new Date(),weekday=d.getDay(),date=todayKey();for(let x of db.monthly){let applies=x.repeat==='daily'||(x.repeat==='weekday'&&(x.weekdays||[]).includes(weekday));if(applies&&!db.todos.some(t=>t.date===date&&t.monthlyId===x.id))db.todos.push({id:uid(),title:x.title,category:x.category,date,done:false,monthlyId:x.id})}persist()}
-function showStartupHelp(message){
-  const lock=document.getElementById('loadLock');
-  lock.style.display='flex';
-  lock.innerHTML='<div style="max-width:440px;line-height:1.7"><b>Habit LogをSafariで開いてください</b><p>'+message+'</p><p>この画面はiPhoneの「ファイル」アプリ内のHTMLプレビューで開かれている可能性があります。プレビューでは保存領域が使えないことがあり、記録を安全に保存できません。</p><p><b>更新方法</b><br>① この画面を閉じる<br>② HTMLをGitHub Pagesの既存の index.html と置き換える<br>③ 公開URLをSafariで開く<br>④ Safariの共有メニューから「ホーム画面に追加」した既存アプリを使う</p><p>※ホーム画面アプリとHTMLプレビューは別の保存領域です。プレビュー上で初期化や新規記録をしないでください。</p></div>';
-  setSaveStatus('⚠ Safariで開く必要があります',true);
-}
-if(location.protocol==='file:'){
-  showStartupHelp('ダウンロードしたHTMLファイルを直接開いています。');
-}else{
-  load().then(()=>applyRepeats().then(render)).catch(err=>{
-    console.error(err);setSaveStatus('⚠ '+(err.message||'読み込みに失敗しました'),true);
-    const lock=document.getElementById('loadLock');lock.style.display='flex';
-    lock.innerHTML='<div style="max-width:420px"><b>保存データを読み込めませんでした</b><p>データを消さないため、自動で初期化していません。</p><p style="color:#b94d4d">'+esc(err.message||'不明なエラー')+'</p><button class="btn" onclick="location.reload()">もう一度読み込む</button><p style="font-size:12px;margin-top:14px">解決しない場合は、以前のHabit LogからJSONバックアップを取り出して保管してください。</p></div>';
-  });
-}
+const startupFailsafe=setTimeout(()=>{const lock=document.getElementById('loadLock');if(lock&&lock.style.display!=='none'){lock.innerHTML='<div><b>保存領域の確認に時間がかかっています</b><p>この画面のまま止まる場合は、SafariでGitHub PagesのURLを直接開いてください。データ保護のため、保存データを消去・初期化していません。</p></div>'}},7000);
+load().then(()=>applyRepeats().then(render)).then(()=>clearTimeout(startupFailsafe)).catch(err=>{clearTimeout(startupFailsafe);console.error(err);setSaveStatus('⚠ '+(err.message||'読み込みに失敗しました'),true);const lock=document.getElementById('loadLock');lock.style.display='flex';lock.innerHTML='<div><b>保存データを読み込めませんでした</b><p>データ保護のため、空の状態では起動していません。</p><p style="color:#b94d4d">'+esc(err.message||'不明なエラー')+'</p><p>以前の端末・ホーム画面のアプリからJSONバックアップを取り出せる場合は、そちらを保管してください。</p></div>'});
 </script></body></html>
