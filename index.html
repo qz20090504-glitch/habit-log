@@ -34,6 +34,13 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}header{padding:1
   <div class="section-title">月間の達成状況</div><div class="card" id="monthlySummary"></div>
 </section>
 <section class="panel" id="goals">
+  <div class="section-title">年間計画</div>
+  <div class="card">
+    <div class="row between"><div><div class="muted small">YEARLY PLAN</div><div class="title" style="font-size:18px">年間でやりたいこと</div></div><button class="btn smallbtn" onclick="openAnnualModal()">＋ 追加</button></div>
+    <div class="row between" style="margin-top:12px"><span class="muted small">表示する年度</span><select id="annualYear" class="input" style="width:auto;min-width:112px" onchange="renderAnnual()"></select></div>
+    <div id="annualList" style="margin-top:8px"></div>
+  </div>
+  <div class="section-title">大目標・中間目標</div>
   <div class="card">
     <div class="row between"><div><div class="muted small">GOAL TREE</div><div class="title" style="font-size:18px">最終目標</div></div><button class="btn smallbtn" onclick="openGoalModal('big')">＋ 最終目標</button></div>
     <p class="muted small" style="line-height:1.5;margin-bottom:0">最終目標を中間目標・達成項目に分解し、実行する目標を月間ToDoへ登録できます。</p>
@@ -65,14 +72,14 @@ let db, state, viewMonth=new Date().toISOString().slice(0,7), currentTab='daily'
 const $=id=>document.getElementById(id);
 const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
 const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
-const defaultState=()=>({version:1,categories:[{id:'study',name:'勉強',icon:'📚'},{id:'exercise',name:'運動',icon:'💪'},{id:'work',name:'仕事',icon:'💻'},{id:'home',name:'家庭菜園',icon:'🌱'},{id:'money',name:'お金',icon:'💰'},{id:'reading',name:'読書',icon:'📖'},{id:'other',name:'その他',icon:'✨'}],goals:[],monthly:[],daily:[],history:{},rolloverChecked:{},collapsedGoals:{},lastOpen:today()});
+const defaultState=()=>({version:1,categories:[{id:'study',name:'勉強',icon:'📚'},{id:'exercise',name:'運動',icon:'💪'},{id:'work',name:'仕事',icon:'💻'},{id:'home',name:'家庭菜園',icon:'🌱'},{id:'money',name:'お金',icon:'💰'},{id:'reading',name:'読書',icon:'📖'},{id:'other',name:'その他',icon:'✨'}],goals:[],annualPlans:[],monthly:[],daily:[],history:{},rolloverChecked:{},collapsedGoals:{},lastOpen:today()});
 function openDB(){return new Promise((resolve,reject)=>{let req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>req.result.createObjectStore(STORE);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
 function dbGet(){return new Promise((resolve,reject)=>{let r=db.transaction(STORE).objectStore(STORE).get('state');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
 function dbSet(){return new Promise((resolve,reject)=>{let tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(state,'state');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
 async function save(){await dbSet();render()}
-async function init(){try{db=await openDB();state=await dbGet()||defaultState();state.collapsedGoals=state.collapsedGoals||{};await dbSet();checkRollover();render()}catch(e){alert('この環境ではデータ保存を開始できませんでした。Safariなどの通常ブラウザで開き直してください。')}}
-function switchTab(tab){currentTab=tab;document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab));document.querySelectorAll('.tabbar button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$('pageTitle').textContent={daily:'今日のToDo',monthly:'月間管理',goals:'最終目標',analysis:'分析・振り返り',settings:'設定'}[tab];render()}
-function render(){if(!state)return;renderDaily();renderMonthly();renderGoals();renderAnalysis();renderSettings()}
+async function init(){try{db=await openDB();state=await dbGet()||defaultState();state.collapsedGoals=state.collapsedGoals||{};state.annualPlans=state.annualPlans||[];await dbSet();checkRollover();render()}catch(e){alert('この環境ではデータ保存を開始できませんでした。Safariなどの通常ブラウザで開き直してください。')}}
+function switchTab(tab){currentTab=tab;document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab));document.querySelectorAll('.tabbar button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$('pageTitle').textContent={daily:'今日のToDo',monthly:'月間管理',goals:'ホーム・年間計画',analysis:'分析・振り返り',settings:'設定'}[tab];render()}
+function render(){if(!state)return;renderDaily();renderMonthly();renderAnnual();renderGoals();renderAnalysis();renderSettings()}
 function fmtDate(s){let d=new Date(s+'T00:00:00');return `${d.getMonth()+1}月${d.getDate()}日`}
 function catName(id){let c=state.categories.find(x=>x.id===id);return c?`${c.icon||''} ${c.name}`:'未分類'}
 function goalById(id){return state.goals.find(g=>g.id===id)}
@@ -86,6 +93,28 @@ function categoryOptions(selected){return state.categories.map(c=>`<option value
 function openGoalModal(level,parentId=null,id=null){let existing=id?findNode(id):null;let title=existing?.title||'';let labels={big:'最終目標',mid:'中間目標',small:'達成項目'};openModal((existing?'編集：':'追加：')+labels[level],`<div class="field"><label>目標名</label><input class="input" id="goalTitle" maxlength="100" value="${esc(title)}" placeholder="目標を入力"></div><div class="field"><label>説明（任意）</label><textarea id="goalDesc" rows="2" class="input">${esc(existing?.description||'')}</textarea></div>`,existing?'保存する':'追加する',async()=>{let v=$('goalTitle').value.trim();if(!v)return alert('目標名を入力してください');if(existing){existing.title=v;existing.description=$('goalDesc').value}else{let n={id:uid(),title:v,description:$('goalDesc').value,children:[],done:false};if(level==='big')state.goals.push(n);else{let p=findNode(parentId);if(p)p.children.push(n)}}closeModal();await save()})}
 function findNode(id){function walk(nodes){for(let n of nodes||[]){if(n.id===id)return n;let found=walk(n.children);if(found)return found}return null}return walk(state.goals)}
 function findParentArray(id,nodes=state.goals){for(let n of nodes||[]){if((n.children||[]).some(c=>c.id===id))return n.children;let found=findParentArray(id,n.children||[]);if(found)return found}return null}
+function renderAnnual(){
+  if(!state)return;
+  const sel=$('annualYear');if(!sel)return;
+  const years=[...new Set([String(new Date().getFullYear()),...(state.annualPlans||[]).map(x=>String(x.year))])].sort();
+  const current=sel.value||String(new Date().getFullYear());
+  sel.innerHTML=years.map(y=>`<option value="${esc(y)}">${esc(y)}年</option>`).join('');
+  sel.value=years.includes(current)?current:String(new Date().getFullYear());
+  const items=(state.annualPlans||[]).filter(x=>String(x.year)===sel.value);
+  $('annualList').innerHTML=items.length?items.map(x=>`<div class="goal-node" style="margin:10px 0"><div class="row between"><strong>${esc(x.title)}</strong><span class="badge ${x.progress>=100?'green':'blue'}">${x.progress||0}%</span></div>${x.description?`<p class="muted small">${esc(x.description)}</p>`:''}<div class="row between tiny muted"><span>${esc(x.category||'その他')}${x.deadline?' · 期限 '+esc(x.deadline):''}</span><span>${x.progress>=100?'達成':x.status==='hold'?'保留':'進行中'}</span></div><div class="progress" style="margin:8px 0"><i style="width:${Math.max(0,Math.min(100,+x.progress||0))}%"></i></div><div class="node-actions"><button class="btn ghost smallbtn" onclick="openAnnualModal('${x.id}')">編集</button><button class="iconbtn" onclick="deleteAnnual('${x.id}')">削除</button></div></div>`).join(''):'<div class="empty">この年度の年間目標はまだありません。1年間でやりたいことを追加しましょう。</div>';
+}
+function openAnnualModal(id=null){
+  const x=id?(state.annualPlans||[]).find(a=>a.id===id):null;
+  const year=x?.year||$('annualYear')?.value||String(new Date().getFullYear());
+  openModal(x?'年間目標を編集':'年間目標を追加',`<div class="field"><label>年度</label><input id="apYear" type="number" min="2000" max="2100" class="input" value="${esc(year)}"></div><div class="field"><label>やりたいこと・達成したいこと</label><input id="apTitle" maxlength="120" class="input" value="${esc(x?.title||'')}" placeholder="例：日常英会話ができるようになる"></div><div class="field"><label>カテゴリー</label><select id="apCat" class="input">${categoryOptions(x?.category||'other')}</select></div><div class="field"><label>内容・具体的なゴール</label><textarea id="apDesc" rows="2" class="input" placeholder="1年後にどうなっていたいか">${esc(x?.description||'')}</textarea></div><div class="field"><label>期限（任意）</label><input id="apDeadline" type="date" class="input" value="${esc(x?.deadline||'')}"></div><div class="field"><label>進捗率（%）</label><input id="apProgress" type="number" min="0" max="100" class="input" value="${x?.progress??0}"></div>`,x?'保存':'追加',async()=>{
+    const title=$('apTitle').value.trim(),yr=String(Math.max(2000,Math.min(2100,parseInt($('apYear').value,10)||new Date().getFullYear())));
+    if(!title)return alert('目標を入力してください');
+    const data={year:yr,title,category:$('apCat').value,description:$('apDesc').value.trim(),deadline:$('apDeadline').value,progress:Math.max(0,Math.min(100,parseInt($('apProgress').value,10)||0))};
+    if(x)Object.assign(x,data);else state.annualPlans.push({id:uid(),...data});
+    closeModal();$('annualYear').value=yr;await save();
+  });
+}
+async function deleteAnnual(id){if(!confirm('この年間目標を削除しますか？'))return;state.annualPlans=state.annualPlans.filter(x=>x.id!==id);await save()}
 function renderGoals(){let root=$('goalTree');if(!state.goals.length){root.innerHTML='<div class="card empty">最終目標を追加して、達成までの道筋を作りましょう。</div>';return}root.innerHTML=state.goals.map(g=>{let descendants=[];function walk(a){(a||[]).forEach(n=>{descendants.push(n);walk(n.children)})}walk(g.children);let total=descendants.length,completed=descendants.filter(n=>n.done).length;return `<div class="card goal-card"><div class="node-head"><div class="node-name">${esc(g.title)}</div><span class="badge">${completed}/${total} 完了</span></div>${g.description?`<p class="muted small">${esc(g.description)}</p>`:''}<div class="node-actions"><button class="btn secondary smallbtn" onclick="toggleChildren('${g.id}')">${state.collapsedGoals[g.id]?'中間目標を展開 ▸':'中間目標を閉じる ▾'}</button><button class="iconbtn" onclick="openGoalModal('big',null,'${g.id}')">編集</button><button class="iconbtn" onclick="moveGoal('${g.id}',-1)">↑</button><button class="iconbtn" onclick="moveGoal('${g.id}',1)">↓</button><button class="iconbtn" onclick="deleteNode('${g.id}')">削除</button></div><div class="children ${state.collapsedGoals[g.id]?'hidden':''}" id="children-${g.id}">${(g.children||[]).map(n=>renderGoalNode(n,1)).join('')}<button class="btn ghost smallbtn" onclick="openGoalModal('mid','${g.id}')">＋ 中間目標を追加</button></div></div>`}).join('')}
 function renderGoalNode(node,depth){let isMid=depth===1,indent=Math.min(depth*13,78);let kids=node.children||[];return `<div class="goal-node ${isMid?'mid':'smallnode'}" style="margin-left:${indent}px"><div class="node-head">${!isMid?`<input type="checkbox" ${node.done?'checked':''} onchange="toggleGoal('${node.id}',this.checked)">`:''}<div class="node-name">${esc(node.title)}</div>${kids.length?`<span class="badge">${kids.filter(x=>x.done).length}/${kids.length}</span>`:''}</div>${node.description?`<p class="muted small">${esc(node.description)}</p>`:''}<div class="node-actions"><button class="btn secondary smallbtn" onclick="registerGoal('${node.id}')">月間ToDoへ登録</button>${kids.length?`<button class="iconbtn" onclick="toggleChildren('${node.id}')">${state.collapsedGoals[node.id]?'展開 ▸':'閉じる ▾'}</button>`:''}<button class="btn ghost smallbtn" onclick="openGoalModal('item','${node.id}')">＋ 達成項目を追加</button><button class="iconbtn" onclick="openGoalModal('${isMid?'mid':'item'}','${isMid?findRootId(node.id):findParentId(node.id)}','${node.id}')">編集</button><button class="iconbtn" onclick="moveNode('${node.id}',-1)">↑</button><button class="iconbtn" onclick="moveNode('${node.id}',1)">↓</button><button class="iconbtn" onclick="deleteNode('${node.id}')">削除</button></div><div class="children ${state.collapsedGoals[node.id]?'hidden':''}" id="children-${node.id}">${kids.map(n=>renderGoalNode(n,depth+1)).join('')}</div></div>`}
 function findRootId(id){let root=null;function walk(nodes,parent=null){for(let n of nodes||[]){if(n.id===id){root=parent?root||parent.id:null;return true}if(walk(n.children,n))return true}return false}walk(state.goals);return root}
@@ -114,7 +143,7 @@ function moveCategory(id,d){moveIn(state.categories,id,d)}
 async function deleteCategory(id){if(!confirm('カテゴリーを削除しますか？既存記録のカテゴリーは未分類になります。'))return;state.categories=state.categories.filter(c=>c.id!==id);state.daily.forEach(t=>{if(t.category===id)t.category='other'});state.monthly.forEach(t=>{if(t.category===id)t.category='other'});await save()}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function exportData(){let blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`habit-log-backup-${today()}.json`;a.click();URL.revokeObjectURL(a.href)}
-function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async()=>{try{let v=JSON.parse(r.result);if(!v.goals||!v.daily||!v.categories)throw 0;if(!confirm('現在のデータをバックアップの内容で置き換えますか？'))return;state=v;await save();alert('復元しました')}catch(err){alert('バックアップファイルを読み込めませんでした')}e.target.value=''};r.readAsText(f)}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async()=>{try{let v=JSON.parse(r.result);if(!v.goals||!v.daily||!v.categories)throw 0;if(!confirm('現在のデータをバックアップの内容で置き換えますか？'))return;state=v;state.annualPlans=state.annualPlans||[];state.collapsedGoals=state.collapsedGoals||{};await save();alert('復元しました')}catch(err){alert('バックアップファイルを読み込めませんでした')}e.target.value=''};r.readAsText(f)}
 async function resetData(){if(!confirm('すべての目標・ToDo・記録を削除します。本当によろしいですか？'))return;state=defaultState();await save()}
 init();
 </script>
