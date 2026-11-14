@@ -38,6 +38,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}header{padding:1
   <div class="card">
     <div class="row between"><div><div class="muted small">YEARLY PLAN</div><div class="title" style="font-size:18px">年間でやりたいこと</div></div><button class="btn smallbtn" onclick="openAnnualModal()">＋ 追加</button></div>
     <div class="row between" style="margin-top:12px"><span class="muted small">表示する年度</span><select id="annualYear" class="input" style="width:auto;min-width:112px" onchange="renderAnnual()"></select></div>
+    <div class="row between" style="margin-top:14px;gap:8px;flex-wrap:wrap"><div id="annualGenres" class="row" style="gap:6px;flex-wrap:wrap;flex:1"></div><button class="btn ghost smallbtn" onclick="openAnnualGenreModal()">＋ジャンル</button></div>
     <div id="annualList" style="margin-top:8px"></div>
   </div>
   <div class="section-title">大目標・中間目標</div>
@@ -68,7 +69,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}header{padding:1
 <div class="modalback" id="modalBack" onclick="if(event.target===this)closeModal()"><div class="modal"><h2 id="modalTitle"></h2><div id="modalBody"></div><div class="modalfoot" id="modalFoot"></div></div></div>
 <script>
 const DB_NAME='habit-log-goals-v1', STORE='app';
-let db, state, viewMonth=new Date().toISOString().slice(0,7), currentTab='daily';
+let db, state, viewMonth=new Date().toISOString().slice(0,7), currentTab='daily', annualSelectedGenre='仕事';
 const $=id=>document.getElementById(id);
 const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
 const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
@@ -77,7 +78,10 @@ function openDB(){return new Promise((resolve,reject)=>{let req=indexedDB.open(D
 function dbGet(){return new Promise((resolve,reject)=>{let r=db.transaction(STORE).objectStore(STORE).get('state');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
 function dbSet(){return new Promise((resolve,reject)=>{let tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(state,'state');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
 async function save(){await dbSet();render()}
-async function init(){try{db=await openDB();state=await dbGet()||defaultState();state.collapsedGoals=state.collapsedGoals||{};state.annualPlans=state.annualPlans||[];await dbSet();checkRollover();render()}catch(e){alert('この環境ではデータ保存を開始できませんでした。Safariなどの通常ブラウザで開き直してください。')}}
+async function init(){try{db=await openDB();state=await dbGet()||defaultState();state.collapsedGoals=state.collapsedGoals||{};state.annualPlans=state.annualPlans||[];
+state.annualGenres=state.annualGenres||['仕事','趣味','お金','家庭','健康','学習','その他'];
+state.annualPlans.forEach(x=>{if(x.done===undefined)x.done=false;if(!x.genre){const c=(state.categories||[]).find(c=>c.id===x.category);x.genre=c?.name||'その他';}});
+await dbSet();checkRollover();render()}catch(e){alert('この環境ではデータ保存を開始できませんでした。Safariなどの通常ブラウザで開き直してください。')}}
 function switchTab(tab){currentTab=tab;document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab));document.querySelectorAll('.tabbar button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$('pageTitle').textContent={daily:'今日のToDo',monthly:'月間管理',goals:'ホーム・年間計画',analysis:'分析・振り返り',settings:'設定'}[tab];render()}
 function render(){if(!state)return;renderDaily();renderMonthly();renderAnnual();renderGoals();renderAnalysis();renderSettings()}
 function fmtDate(s){let d=new Date(s+'T00:00:00');return `${d.getMonth()+1}月${d.getDate()}日`}
@@ -95,9 +99,8 @@ function findNode(id){function walk(nodes){for(let n of nodes||[]){if(n.id===id)
 function findParentArray(id,nodes=state.goals){for(let n of nodes||[]){if((n.children||[]).some(c=>c.id===id))return n.children;let found=findParentArray(id,n.children||[]);if(found)return found}return null}
 function renderAnnual(){
   if(!state)return;
+  state.annualGenres=state.annualGenres||['仕事','趣味','お金','家庭','健康','学習','その他'];
   const sel=$('annualYear');if(!sel)return;
-  // 2026年以降、将来分もあらかじめ選択できるようにする。
-  // 過去に保存済みの年度も候補に残し、既存データを見失わない。
   const baseYear=2026;
   const futureYears=Array.from({length:25},(_,i)=>String(baseYear+i));
   const years=[...new Set([...futureYears,String(new Date().getFullYear()),...(state.annualPlans||[]).map(x=>String(x.year))])]
@@ -105,18 +108,36 @@ function renderAnnual(){
   const current=sel.value||String(new Date().getFullYear());
   sel.innerHTML=years.map(y=>`<option value="${esc(y)}">${esc(y)}年</option>`).join('');
   sel.value=years.includes(current)?current:String(new Date().getFullYear());
-  const items=(state.annualPlans||[]).filter(x=>String(x.year)===sel.value);
-  $('annualList').innerHTML=items.length?items.map(x=>`<div class="goal-node" style="margin:10px 0"><div class="row between"><strong>${esc(x.title)}</strong><span class="badge ${x.progress>=100?'green':'blue'}">${x.progress||0}%</span></div>${x.description?`<p class="muted small">${esc(x.description)}</p>`:''}<div class="row between tiny muted"><span>${esc(x.category||'その他')}${x.deadline?' · 期限 '+esc(x.deadline):''}</span><span>${x.progress>=100?'達成':x.status==='hold'?'保留':'進行中'}</span></div><div class="progress" style="margin:8px 0"><i style="width:${Math.max(0,Math.min(100,+x.progress||0))}%"></i></div><div class="node-actions"><button class="btn ghost smallbtn" onclick="openAnnualModal('${x.id}')">編集</button><button class="iconbtn" onclick="deleteAnnual('${x.id}')">削除</button></div></div>`).join(''):'<div class="empty">この年度の年間目標はまだありません。1年間でやりたいことを追加しましょう。</div>';
+  const all=(state.annualPlans||[]).filter(x=>String(x.year)===sel.value);
+  if(!state.annualGenres.includes(annualSelectedGenre))annualSelectedGenre=state.annualGenres[0]||'その他';
+  $('annualGenres').innerHTML=state.annualGenres.map(g=>`<button class="btn ${annualSelectedGenre===g?'':'ghost'} smallbtn" onclick="selectAnnualGenre('${esc(g)}')">${esc(g)}</button>`).join('');
+  const items=all.filter(x=>(x.genre||'その他')===annualSelectedGenre).sort((a,b)=>Number(!!a.done)-Number(!!b.done));
+  $('annualList').innerHTML=items.length?items.map(x=>`<div class="goal-node" style="margin:9px 0;opacity:${x.done?'.72':'1'}"><div class="row" style="align-items:flex-start;gap:10px"><input type="checkbox" aria-label="完了" ${x.done?'checked':''} onchange="toggleAnnualDone('${x.id}',this.checked)" style="width:22px;height:22px;min-width:22px;margin-top:2px;accent-color:var(--green)"><div style="flex:1;min-width:0"><div class="row between" style="align-items:flex-start"><strong style="${x.done?'text-decoration:line-through;color:var(--muted)':''}">${esc(x.title)}</strong>${x.done?'<span class="badge green">完了</span>':''}</div>${x.description?`<p class="muted small">${esc(x.description)}</p>`:''}<div class="row between tiny muted"><span>${x.deadline?'期限 '+esc(x.deadline):''}</span><span></span></div><div class="node-actions"><button class="btn ghost smallbtn" onclick="openAnnualModal('${x.id}')">編集</button><button class="iconbtn" onclick="deleteAnnual('${x.id}')">削除</button></div></div></div></div>`).join(''):'<div class="empty">このジャンルの年間目標はまだありません。「＋追加」から登録しましょう。</div>';
+}
+function selectAnnualGenre(g){annualSelectedGenre=g;renderAnnual()}
+function openAnnualGenreModal(){
+  openModal('ジャンルを追加','<div class="field"><label>ジャンル名</label><input id="annualGenreName" maxlength="24" class="input" placeholder="例：人間関係、旅行"></div>','追加',async()=>{
+    const name=$('annualGenreName').value.trim();
+    if(!name)return alert('ジャンル名を入力してください');
+    if(state.annualGenres.includes(name))return alert('同じジャンルが既にあります');
+    state.annualGenres.push(name);annualSelectedGenre=name;closeModal();await save();
+  });
+}
+async function toggleAnnualDone(id,done){
+  const x=(state.annualPlans||[]).find(a=>a.id===id);if(!x)return;
+  x.done=!!done;x.completedAt=done?today():null;await save();
 }
 function openAnnualModal(id=null){
   const x=id?(state.annualPlans||[]).find(a=>a.id===id):null;
   const year=x?.year||$('annualYear')?.value||String(new Date().getFullYear());
-  openModal(x?'年間目標を編集':'年間目標を追加',`<div class="field"><label>年度</label><input id="apYear" type="number" min="2000" max="2100" class="input" value="${esc(year)}"></div><div class="field"><label>やりたいこと・達成したいこと</label><input id="apTitle" maxlength="120" class="input" value="${esc(x?.title||'')}" placeholder="例：日常英会話ができるようになる"></div><div class="field"><label>カテゴリー</label><select id="apCat" class="input">${categoryOptions(x?.category||'other')}</select></div><div class="field"><label>内容・具体的なゴール</label><textarea id="apDesc" rows="2" class="input" placeholder="1年後にどうなっていたいか">${esc(x?.description||'')}</textarea></div><div class="field"><label>期限（任意）</label><input id="apDeadline" type="date" class="input" value="${esc(x?.deadline||'')}"></div><div class="field"><label>進捗率（%）</label><input id="apProgress" type="number" min="0" max="100" class="input" value="${x?.progress??0}"></div>`,x?'保存':'追加',async()=>{
+  const genres=state.annualGenres||['仕事','趣味','お金','家庭','健康','学習','その他'];
+  const genre=x?.genre||annualSelectedGenre||genres[0];
+  openModal(x?'年間でやりたいことを編集':'年間でやりたいことを追加',`<div class="field"><label>年度</label><input id="apYear" type="number" min="2000" max="2100" class="input" value="${esc(year)}"></div><div class="field"><label>ジャンル</label><select id="apGenre" class="input">${genres.map(g=>`<option value="${esc(g)}" ${g===genre?'selected':''}>${esc(g)}</option>`).join('')}</select><button type="button" class="btn ghost smallbtn" style="margin-top:8px" onclick="closeModal();openAnnualGenreModal()">＋ ジャンルを追加</button></div><div class="field"><label>やりたいこと</label><input id="apTitle" maxlength="120" class="input" value="${esc(x?.title||'')}" placeholder="例：資格を取得する"></div><div class="field"><label>内容・メモ（任意）</label><textarea id="apDesc" rows="2" class="input" placeholder="具体的にやりたいこと">${esc(x?.description||'')}</textarea></div><div class="field"><label>期限（任意）</label><input id="apDeadline" type="date" class="input" value="${esc(x?.deadline||'')}"></div>`,x?'保存':'追加',async()=>{
     const title=$('apTitle').value.trim(),yr=String(Math.max(2000,Math.min(2100,parseInt($('apYear').value,10)||new Date().getFullYear())));
-    if(!title)return alert('目標を入力してください');
-    const data={year:yr,title,category:$('apCat').value,description:$('apDesc').value.trim(),deadline:$('apDeadline').value,progress:Math.max(0,Math.min(100,parseInt($('apProgress').value,10)||0))};
-    if(x)Object.assign(x,data);else state.annualPlans.push({id:uid(),...data});
-    closeModal();$('annualYear').value=yr;await save();
+    if(!title)return alert('やりたいことを入力してください');
+    const data={year:yr,genre:$('apGenre').value,title,description:$('apDesc').value.trim(),deadline:$('apDeadline').value};
+    if(x)Object.assign(x,data);else state.annualPlans.push({id:uid(),...data,done:false});
+    closeModal();$('annualYear').value=yr;annualSelectedGenre=data.genre;await save();
   });
 }
 async function deleteAnnual(id){if(!confirm('この年間目標を削除しますか？'))return;state.annualPlans=state.annualPlans.filter(x=>x.id!==id);await save()}
