@@ -69,7 +69,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}header{padding:1
 <div class="modalback" id="modalBack" onclick="if(event.target===this)closeModal()"><div class="modal"><h2 id="modalTitle"></h2><div id="modalBody"></div><div class="modalfoot" id="modalFoot"></div></div></div>
 <script>
 const DB_NAME='habit-log-goals-v1', STORE='app';
-let db, state, viewMonth=new Date().toISOString().slice(0,7), currentTab='daily', annualSelectedGenre='仕事';
+let db, state, viewMonth=new Date().toISOString().slice(0,7), currentTab='daily', annualSelectedGenre='すべて';
 const $=id=>document.getElementById(id);
 const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
 const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
@@ -109,10 +109,12 @@ function renderAnnual(){
   sel.innerHTML=years.map(y=>`<option value="${esc(y)}">${esc(y)}年</option>`).join('');
   sel.value=years.includes(current)?current:String(new Date().getFullYear());
   const all=(state.annualPlans||[]).filter(x=>String(x.year)===sel.value);
-  if(!state.annualGenres.includes(annualSelectedGenre))annualSelectedGenre=state.annualGenres[0]||'その他';
-  $('annualGenres').innerHTML=state.annualGenres.map(g=>`<button class="btn ${annualSelectedGenre===g?'':'ghost'} smallbtn" onclick="selectAnnualGenre('${esc(g)}')">${esc(g)}</button>`).join('');
-  const items=all.filter(x=>(x.genre||'その他')===annualSelectedGenre).sort((a,b)=>Number(!!a.done)-Number(!!b.done));
-  $('annualList').innerHTML=items.length?items.map(x=>`<div class="goal-node" style="margin:9px 0;opacity:${x.done?'.72':'1'}"><div class="row" style="align-items:flex-start;gap:10px"><input type="checkbox" aria-label="完了" ${x.done?'checked':''} onchange="toggleAnnualDone('${x.id}',this.checked)" style="width:22px;height:22px;min-width:22px;margin-top:2px;accent-color:var(--green)"><div style="flex:1;min-width:0"><div class="row" style="align-items:center;gap:10px;flex-wrap:wrap"><strong style="flex:1;min-width:0;${x.done?'text-decoration:line-through;color:var(--muted)':''}">${esc(x.title)}</strong><div class="row" style="gap:6px;flex-shrink:0"><button class="btn ghost smallbtn" onclick="openAnnualModal('${x.id}')">編集</button><button class="iconbtn" onclick="deleteAnnual('${x.id}')">削除</button>${x.done?'<span class="badge green">完了</span>':''}</div></div>${x.description?`<p class="muted small">${esc(x.description)}</p>`:''}<div class="row between tiny muted"><span>${x.deadline?'期限 '+esc(x.deadline):''}</span><span></span></div></div></div></div>`).join(''):'<div class="empty">このジャンルの年間目標はまだありません。「＋追加」から登録しましょう。</div>';
+  const orderedGenres=[...state.annualGenres.filter(g=>g!=='その他'),'その他'];
+  if(annualSelectedGenre!=='すべて'&&!orderedGenres.includes(annualSelectedGenre))annualSelectedGenre='すべて';
+  $('annualGenres').innerHTML=[`<button class="btn ${annualSelectedGenre==='すべて'?'':'ghost'} smallbtn" onclick="selectAnnualGenre('すべて')">すべて</button>`,...orderedGenres.map(g=>`<button class="btn ${annualSelectedGenre===g?'':'ghost'} smallbtn" onclick="selectAnnualGenre('${esc(g)}')">${esc(g)}</button>`)].join('');
+  let items=annualSelectedGenre==='すべて'?all.slice():all.filter(x=>(x.genre||'その他')===annualSelectedGenre);
+  items.sort((a,b)=>Number(!!a.done)-Number(!!b.done));
+  $('annualList').innerHTML=items.length?items.map(x=>`<div class="goal-node" style="margin:9px 0;opacity:${x.done?'.72':'1'}"><div class="row" style="align-items:flex-start;gap:10px"><input type="checkbox" aria-label="完了" ${x.done?'checked':''} onchange="toggleAnnualDone('${x.id}',this.checked)" style="width:22px;height:22px;min-width:22px;margin-top:2px;accent-color:var(--green)"><div style="flex:1;min-width:0"><div class="row" style="align-items:center;gap:10px;flex-wrap:wrap"><strong style="flex:1;min-width:0;${x.done?'text-decoration:line-through;color:var(--muted)':''}">${esc(x.title)}</strong><div class="row" style="gap:6px;flex-shrink:0"><button class="btn ghost smallbtn" onclick="openAnnualModal('${x.id}')">編集</button><button class="iconbtn" onclick="deleteAnnual('${x.id}')">削除</button>${x.done?'<span class="badge green">完了</span>':''}</div></div>${annualSelectedGenre==='すべて'?`<div class="tiny muted" style="margin-top:4px">${esc(x.genre||'その他')}</div>`:''}${x.description?`<p class="muted small">${esc(x.description)}</p>`:''}<div class="row between tiny muted"><span>${x.deadline?'期限 '+esc(x.deadline):''}</span><span></span></div></div></div></div>`).join(''):'<div class="empty">このジャンルの年間目標はまだありません。「＋追加」から登録しましょう。</div>';
 }
 function selectAnnualGenre(g){annualSelectedGenre=g;renderAnnual()}
 function openAnnualGenreModal(){
@@ -120,7 +122,9 @@ function openAnnualGenreModal(){
     const name=$('annualGenreName').value.trim();
     if(!name)return alert('ジャンル名を入力してください');
     if(state.annualGenres.includes(name))return alert('同じジャンルが既にあります');
-    state.annualGenres.push(name);annualSelectedGenre=name;closeModal();await save();
+    const otherIndex=state.annualGenres.indexOf('その他');
+    if(otherIndex>=0)state.annualGenres.splice(otherIndex,0,name);else state.annualGenres.push(name);
+    annualSelectedGenre=name;closeModal();await save();
   });
 }
 async function toggleAnnualDone(id,done){
@@ -131,7 +135,7 @@ function openAnnualModal(id=null){
   const x=id?(state.annualPlans||[]).find(a=>a.id===id):null;
   const year=x?.year||$('annualYear')?.value||String(new Date().getFullYear());
   const genres=state.annualGenres||['仕事','趣味','お金','家庭','健康','学習','その他'];
-  const genre=x?.genre||annualSelectedGenre||genres[0];
+  const genre=x?.genre||(annualSelectedGenre==='すべて'?(genres.find(g=>g!=='その他')||'その他'):annualSelectedGenre)||genres[0];
   openModal(x?'年間でやりたいことを編集':'年間でやりたいことを追加',`<div class="field"><label>年度</label><input id="apYear" type="number" min="2000" max="2100" class="input" value="${esc(year)}"></div><div class="field"><label>ジャンル</label><select id="apGenre" class="input">${genres.map(g=>`<option value="${esc(g)}" ${g===genre?'selected':''}>${esc(g)}</option>`).join('')}</select><button type="button" class="btn ghost smallbtn" style="margin-top:8px" onclick="closeModal();openAnnualGenreModal()">＋ ジャンルを追加</button></div><div class="field"><label>やりたいこと</label><input id="apTitle" maxlength="120" class="input" value="${esc(x?.title||'')}" placeholder="例：資格を取得する"></div><div class="field"><label>内容・メモ（任意）</label><textarea id="apDesc" rows="2" class="input" placeholder="具体的にやりたいこと">${esc(x?.description||'')}</textarea></div><div class="field"><label>期限（任意）</label><input id="apDeadline" type="date" class="input" value="${esc(x?.deadline||'')}"></div>`,x?'保存':'追加',async()=>{
     const title=$('apTitle').value.trim(),yr=String(Math.max(2000,Math.min(2100,parseInt($('apYear').value,10)||new Date().getFullYear())));
     if(!title)return alert('やりたいことを入力してください');
