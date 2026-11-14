@@ -96,7 +96,12 @@ function findParentArray(id,nodes=state.goals){for(let n of nodes||[]){if((n.chi
 function renderAnnual(){
   if(!state)return;
   const sel=$('annualYear');if(!sel)return;
-  const years=[...new Set([String(new Date().getFullYear()),...(state.annualPlans||[]).map(x=>String(x.year))])].sort();
+  // 2026年以降、将来分もあらかじめ選択できるようにする。
+  // 過去に保存済みの年度も候補に残し、既存データを見失わない。
+  const baseYear=2026;
+  const futureYears=Array.from({length:25},(_,i)=>String(baseYear+i));
+  const years=[...new Set([...futureYears,String(new Date().getFullYear()),...(state.annualPlans||[]).map(x=>String(x.year))])]
+    .filter(y=>/^\\d{4}$/.test(y)).sort((a,b)=>Number(a)-Number(b));
   const current=sel.value||String(new Date().getFullYear());
   sel.innerHTML=years.map(y=>`<option value="${esc(y)}">${esc(y)}年</option>`).join('');
   sel.value=years.includes(current)?current:String(new Date().getFullYear());
