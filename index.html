@@ -101,7 +101,7 @@ function renderAnnual(){
   const baseYear=2026;
   const futureYears=Array.from({length:25},(_,i)=>String(baseYear+i));
   const years=[...new Set([...futureYears,String(new Date().getFullYear()),...(state.annualPlans||[]).map(x=>String(x.year))])]
-    .filter(y=>/^\\d{4}$/.test(y)).sort((a,b)=>Number(a)-Number(b));
+    .filter(y=>/^\d{4}$/.test(y)).sort((a,b)=>Number(a)-Number(b));
   const current=sel.value||String(new Date().getFullYear());
   sel.innerHTML=years.map(y=>`<option value="${esc(y)}">${esc(y)}年</option>`).join('');
   sel.value=years.includes(current)?current:String(new Date().getFullYear());
